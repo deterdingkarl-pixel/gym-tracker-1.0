@@ -1,8 +1,10 @@
 import React, { useRef, useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
-import { Card, Button } from '@/components/ui/Primitives';
+import { useAuthStore } from '@/store/useAuthStore';
+import { isSupabaseConfigured } from '@/lib/supabaseClient';
+import { Card, Button, Badge } from '@/components/ui/Primitives';
 import { exportAsJson, parseImportedJson } from '@/lib/storage';
-import { Download, Upload, RotateCcw, Trash2 } from 'lucide-react';
+import { Download, Upload, RotateCcw, Trash2, Cloud, LogOut } from 'lucide-react';
 
 export default function Settings() {
   const settings = useAppStore((s) => s.settings);
@@ -11,6 +13,9 @@ export default function Settings() {
   const resetToSeed = useAppStore((s) => s.resetToSeed);
   const resetToEmpty = useAppStore((s) => s.resetToEmpty);
   const fullState = useAppStore((s) => s);
+
+  const user = useAuthStore((s) => s.user);
+  const signOut = useAuthStore((s) => s.signOut);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importError, setImportError] = useState<string | null>(null);
@@ -55,6 +60,29 @@ export default function Settings() {
         <h1 className="text-2xl font-semibold tracking-tight">Einstellungen</h1>
         <p className="text-sm text-ink-muted mt-1">Einheiten, Darstellung und Datenverwaltung.</p>
       </div>
+
+      {isSupabaseConfigured && (
+        <Card className="p-5 flex flex-col gap-4">
+          <h2 className="text-sm font-semibold text-ink">Konto &amp; Synchronisierung</h2>
+          {user ? (
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-center gap-2">
+                <Cloud size={16} className="text-accent" />
+                <span className="text-sm text-ink">{user.email}</span>
+                <Badge tone="accent">Synchronisiert</Badge>
+              </div>
+              <Button size="sm" variant="secondary" onClick={() => signOut()}>
+                <LogOut size={14} /> Abmelden
+              </Button>
+            </div>
+          ) : (
+            <p className="text-sm text-ink-muted">
+              Du nutzt die App aktuell ohne Anmeldung — Daten bleiben nur auf diesem Gerät. Lade die Seite neu und
+              melde dich an, um Geräte zu synchronisieren.
+            </p>
+          )}
+        </Card>
+      )}
 
       <Card className="p-5 flex flex-col gap-4">
         <h2 className="text-sm font-semibold text-ink">Einheiten</h2>

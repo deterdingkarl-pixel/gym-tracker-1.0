@@ -31,6 +31,13 @@ npm run build     # erzeugt einen statischen Build in dist/
 npm run preview   # zeigt den Build lokal an
 ```
 
+## 1a. Cloud-Synchronisierung einrichten (optional)
+
+Die App läuft standardmäßig rein lokal (localStorage). Wenn du Supabase-
+Umgebungsvariablen setzt (siehe `.env.example`), erscheint automatisch ein
+Login-Bildschirm und Daten werden geräteübergreifend synchronisiert.
+Details siehe Abschnitt „Cloud-Synchronisierung" weiter unten.
+
 ## 2. Projektstruktur
 
 ```
@@ -109,19 +116,50 @@ Beim ersten Start wird die App automatisch mit Beispieldaten befüllt
 Unter **Einstellungen** lassen sich alle Daten jederzeit auf die
 Beispieldaten zurücksetzen oder vollständig löschen.
 
-## 5. MVP-Funktionsumfang & mögliche Erweiterungen
+## 6. Cloud-Synchronisierung (Supabase)
+
+Die App unterstützt optional eine echte Synchronisierung zwischen mehreren
+Geräten über [Supabase](https://supabase.com) (kostenloser Tarif reicht aus).
+
+**Funktionsweise:** Der komplette App-Zustand (Übungen, Pläne, Trainings,
+Körpermaße, Einstellungen) wird als ein JSON-Objekt in einer Tabelle
+`user_data` gespeichert, pro Nutzer eine Zeile. Beim Anmelden wird der
+Cloud-Stand geladen; jede lokale Änderung wird (leicht verzögert) automatisch
+zurückgeschrieben. Row-Level-Security sorgt dafür, dass jeder Nutzer nur seine
+eigene Zeile lesen/schreiben kann.
+
+**Einrichtung:**
+1. Kostenloses Konto auf [supabase.com](https://supabase.com) erstellen, neues Projekt anlegen.
+2. Im Supabase-Dashboard unter „SQL Editor" den Inhalt von `supabase/schema.sql`
+   ausführen — das legt die Tabelle und die Sicherheitsregeln an.
+3. Unter „Project Settings" → „API" die Werte **Project URL** und
+   **anon public key** kopieren.
+4. Lokal: `.env.example` zu `.env.local` kopieren und die beiden Werte eintragen.
+5. Bei Vercel: unter „Settings" → „Environment Variables" die gleichen zwei
+   Variablen (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) eintragen und neu deployen.
+
+Ohne diese Variablen funktioniert die App weiterhin exakt wie zuvor, rein
+lokal — es wird kein Login erzwungen. Ist Supabase konfiguriert, kann man
+sich trotzdem per „Ohne Anmeldung nutzen" entscheiden, die App nur lokal zu
+verwenden.
+
+## 7. MVP-Funktionsumfang & mögliche Erweiterungen
 
 Alle im Briefing geforderten Kernfunktionen sind als funktionierendes MVP
 umgesetzt: Dashboard mit Kennzahlen, Kalender/Heatmap und Trainingsserien;
 manuelles Eintragen/Bearbeiten/Kopieren/Löschen von Trainings; Trainingspläne
 mit sortierbaren Übungen und Favoriten; Übungsbibliothek mit Suche/Filtern;
 Fortschrittsseite mit Diagrammen, PRs, Kalender und Statistiken samt
-Zeitraum-Filter; Einstellungen mit Einheiten, JSON-Export/Import und Reset.
+Zeitraum-Filter; Einstellungen mit Einheiten, JSON-Export/Import und Reset;
+optionale Cloud-Synchronisierung über Supabase mit E-Mail/Passwort-Login.
 
 Bewusst als **spätere Erweiterung** markiert (nicht Teil des MVP):
 
-- **Cloud-Synchronisierung / Login** — die Datenstruktur ist dafür
-  vorbereitet (siehe Abschnitt 3), aber noch nicht angebunden.
+- **Konflikt-Auflösung bei gleichzeitigen Änderungen** — aktuell gilt beim
+  ersten Laden „Cloud gewinnt, falls vorhanden", danach schreibt jedes Gerät
+  seine Änderungen zeitversetzt. Trainierst du auf zwei Geräten *gleichzeitig*
+  offline, gewinnt die zuletzt gespeicherte Version. Für die meisten
+  Nutzungsmuster (ein Gerät nach dem anderen) ist das unkritisch.
 - **Hellmodus** — der Umschalter ist in den Einstellungen sichtbar, aber
   deaktiviert; die Farb-Tokens in `tailwind.config.js` sind so benannt, dass
   ein zweites Farbschema ergänzt werden kann, ohne Komponenten anzufassen.
@@ -129,5 +167,7 @@ Bewusst als **spätere Erweiterung** markiert (nicht Teil des MVP):
   Auf/Ab-Buttons gelöst, funktional aber ohne Maus-Drag.
 - **Körpermaße** (Umfänge) — der Datentyp `BodyMetricEntry.measurements`
   existiert bereits, die UI erfasst bislang nur das Körpergewicht.
+- **Passwort vergessen / Social Login** (Google, Apple) — aktuell nur
+  E-Mail/Passwort.
 - **Undo für Löschvorgänge** und ein Papierkorb statt sofortigem Löschen.
 - **Mehrsprachigkeit** (aktuell nur Deutsch).
