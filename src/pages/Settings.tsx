@@ -4,7 +4,8 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { isSupabaseConfigured } from '@/lib/supabaseClient';
 import { Card, Button, Badge } from '@/components/ui/Primitives';
 import { exportAsJson, parseImportedJson } from '@/lib/storage';
-import { Download, Upload, RotateCcw, Trash2, Cloud, LogOut } from 'lucide-react';
+import { fetchRepDbExercises } from '@/lib/repdbImport';
+import { Download, Upload, RotateCcw, Trash2, Cloud, LogOut, Database } from 'lucide-react';
 
 export default function Settings() {
   const settings = useAppStore((s) => s.settings);
@@ -12,6 +13,7 @@ export default function Settings() {
   const replaceAllData = useAppStore((s) => s.replaceAllData);
   const resetToSeed = useAppStore((s) => s.resetToSeed);
   const resetToEmpty = useAppStore((s) => s.resetToEmpty);
+  const bulkAddExercises = useAppStore((s) => s.bulkAddExercises);
   const fullState = useAppStore((s) => s);
 
   const user = useAuthStore((s) => s.user);
@@ -21,6 +23,10 @@ export default function Settings() {
   const [importError, setImportError] = useState<string | null>(null);
   const [importSuccess, setImportSuccess] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
+
+  const [dbImportState, setDbImportState] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
+  const [dbImportResult, setDbImportResult] = useState<{ added: number; skipped: number } | null>(null);
+  const [dbImportError, setDbImportError] = useState<string | null>(null);
 
   function handleExport() {
     const { version, exercises, plans, workouts, bodyMetrics, settings: s } = fullState;
@@ -52,6 +58,22 @@ export default function Settings() {
   function handleReset() {
     resetToEmpty();
     setConfirmReset(false);
+  }
+
+  async function handleRepDbImport() {
+    setDbImportState('loading');
+    setDbImportError(null);
+    try {
+      const list = await fetchRepDbExercises();
+      const added = bulkAddExercises(list);
+      setDbImportResult({ added, skipped: list.length - added });
+      setDbImportState('done');
+    } catch (err) {
+      setDbImportError(
+        err instanceof Error ? err.message : 'Die Übungsdatenbank konnte nicht geladen werden.'
+      );
+      setDbImportState('error');
+    }
   }
 
   return (
@@ -124,6 +146,42 @@ export default function Settings() {
         <p className="text-xs text-ink-faint">
           Der Hellmodus ist als nächster Ausbauschritt vorgesehen — die Farbtoken sind bereits so aufgebaut, dass ein
           zweites Theme ergänzt werden kann.
+        </p>
+      </Card>
+
+      <Card className="p-5 flex flex-col gap-4">
+        <h2 className="text-sm font-semibold text-ink flex items-center gap-2">
+          <Database size={16} className="text-accent" /> Übungsdatenbank importieren
+        </h2>
+        <p className="text-sm text-ink-muted">
+          Lädt eine frei verfügbare Übungsdatenbank (aktuell mehrere hundert Übungen mit deutschen
+          Beschreibungen und Ausführungshinweisen) und fügt sie deiner Übungsbibliothek hinzu. Bereits
+          vorhandene Übungen mit gleichem Namen werden übersprungen, nichts wird überschrieben.
+        </p>
+        <div>
+          <Button variant="secondary" onClick={handleRepDbImport} disabled={dbImportState === 'loading'}>
+            <Database size={16} />
+            {dbImportState === 'loading' ? 'Wird geladen…' : 'Übungsdatenbank importieren'}
+          </Button>
+        </div>
+        {dbImportState === 'done' && dbImportResult && (
+          <p className="text-sm text-good">
+            {dbImportResult.added} neue Übungen hinzugefügt
+            {dbImportResult.skipped > 0 ? ` (${dbImportResult.skipped} bereits vorhanden, übersprungen)` : ''}.
+          </p>
+        )}
+        {dbImportState === 'error' && dbImportError && <p className="text-sm text-warn">{dbImportError}</p>}
+        <p className="text-xs text-ink-faint border-t border-surface-border pt-3">
+          Übungsdaten von{' '}
+          <a
+            href="https://repdb.co"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-ink"
+          >
+            RepDB (repdb.co)
+          </a>
+          .
         </p>
       </Card>
 

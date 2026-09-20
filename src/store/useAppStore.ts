@@ -16,6 +16,8 @@ interface AppState extends AppData {
   addExercise: (e: Omit<Exercise, 'id' | 'createdAt' | 'updatedAt' | 'isCustom'>) => void;
   updateExercise: (id: string, patch: Partial<Exercise>) => void;
   deleteExercise: (id: string) => void;
+  /** Fügt mehrere Übungen auf einmal hinzu, überspringt Namen, die bereits existieren. Gibt die Anzahl neu hinzugefügter Übungen zurück. */
+  bulkAddExercises: (list: Omit<Exercise, 'id' | 'createdAt' | 'updatedAt' | 'isCustom'>[]) => number;
 
   // Pläne
   addPlan: (p: Omit<WorkoutPlan, 'id' | 'createdAt' | 'updatedAt'>) => string;
@@ -82,6 +84,27 @@ export const useAppStore = create<AppState>((set, get) => ({
       persist(next);
       return next;
     }),
+
+  bulkAddExercises: (list) => {
+    let addedCount = 0;
+    set((state) => {
+      const existingNames = new Set(state.exercises.map((ex) => ex.name.trim().toLowerCase()));
+      const now = new Date().toISOString();
+      const toAdd: Exercise[] = [];
+      for (const item of list) {
+        const key = item.name.trim().toLowerCase();
+        if (existingNames.has(key)) continue;
+        existingNames.add(key);
+        toAdd.push({ ...item, id: uuid(), isCustom: true, createdAt: now, updatedAt: now });
+      }
+      addedCount = toAdd.length;
+      if (toAdd.length === 0) return state;
+      const next = { ...state, exercises: [...state.exercises, ...toAdd] };
+      persist(next);
+      return next;
+    });
+    return addedCount;
+  },
 
   addPlan: (p) => {
     const id = uuid();
