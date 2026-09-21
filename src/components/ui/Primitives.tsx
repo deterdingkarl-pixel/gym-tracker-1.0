@@ -154,7 +154,7 @@ export function Modal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
-        className={`relative w-full ${widths} max-h-[90vh] overflow-y-auto bg-surface-raised border border-surface-border rounded-lg shadow-card`}
+        className={`relative w-full ${widths} max-h-[90vh] overflow-y-auto overflow-x-hidden bg-surface-raised border border-surface-border rounded-lg shadow-card`}
       >
         <div className="flex items-center justify-between px-4 py-3 sm:px-5 sm:py-4 border-b border-surface-border sticky top-0 bg-surface-raised">
           <h2 id="modal-title" className="text-lg font-semibold">

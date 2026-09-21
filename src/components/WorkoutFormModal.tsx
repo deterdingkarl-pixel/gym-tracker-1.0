@@ -223,7 +223,7 @@ export default function WorkoutFormModal({
                 <select
                   value={de.exerciseId}
                   onChange={(e) => updateExerciseRow(de.key, { exerciseId: e.target.value })}
-                  className="flex-1 bg-surface-overlay border border-surface-border rounded-md px-3 py-2 text-sm text-ink focus:border-accent focus:ring-1 focus:ring-accent outline-none"
+                  className="flex-1 min-w-0 bg-surface-overlay border border-surface-border rounded-md px-3 py-2 text-sm text-ink focus:border-accent focus:ring-1 focus:ring-accent outline-none"
                   aria-label="Übung auswählen"
                 >
                   {exercises.map((ex) => (
@@ -243,7 +243,7 @@ export default function WorkoutFormModal({
               </div>
 
               <div className="flex flex-col gap-2">
-                <div className="grid grid-cols-[1.5rem_1fr_1fr_1fr_2rem] gap-1.5 text-[11px] text-ink-faint px-1">
+                <div className="grid grid-cols-[1.5rem_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_2rem] gap-1.5 text-[11px] text-ink-faint px-1">
                   <span>Satz</span>
                   <span>Gewicht ({unit})</span>
                   <span>Wdh.</span>
@@ -251,7 +251,7 @@ export default function WorkoutFormModal({
                   <span />
                 </div>
                 {de.sets.map((set, si) => (
-                  <div key={set.id} className="grid grid-cols-[1.5rem_1fr_1fr_1fr_2rem] gap-1.5 items-center">
+                  <div key={set.id} className="grid grid-cols-[1.5rem_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_2rem] gap-1.5 items-center">
                     <span className="text-sm text-ink-muted text-center">{si + 1}</span>
                     <input
                       type="number"
@@ -260,7 +260,7 @@ export default function WorkoutFormModal({
                       min={0}
                       value={set.weight || ''}
                       onChange={(e) => updateSet(de.key, set.id, { weight: Number(e.target.value) })}
-                      className="bg-surface-overlay border border-surface-border rounded-md px-2.5 py-2 text-sm text-ink focus:border-accent focus:ring-1 focus:ring-accent outline-none"
+                      className="w-full min-w-0 bg-surface-overlay border border-surface-border rounded-md px-2.5 py-2 text-sm text-ink focus:border-accent focus:ring-1 focus:ring-accent outline-none"
                       aria-label={`Gewicht Satz ${si + 1}`}
                     />
                     <input
@@ -269,7 +269,7 @@ export default function WorkoutFormModal({
                       min={0}
                       value={set.reps || ''}
                       onChange={(e) => updateSet(de.key, set.id, { reps: Number(e.target.value) })}
-                      className="bg-surface-overlay border border-surface-border rounded-md px-2.5 py-2 text-sm text-ink focus:border-accent focus:ring-1 focus:ring-accent outline-none"
+                      className="w-full min-w-0 bg-surface-overlay border border-surface-border rounded-md px-2.5 py-2 text-sm text-ink focus:border-accent focus:ring-1 focus:ring-accent outline-none"
                       aria-label={`Wiederholungen Satz ${si + 1}`}
                     />
                     <input
@@ -284,7 +284,7 @@ export default function WorkoutFormModal({
                         })
                       }
                       placeholder="–"
-                      className="bg-surface-overlay border border-surface-border rounded-md px-2.5 py-2 text-sm text-ink focus:border-accent focus:ring-1 focus:ring-accent outline-none"
+                      className="w-full min-w-0 bg-surface-overlay border border-surface-border rounded-md px-2.5 py-2 text-sm text-ink focus:border-accent focus:ring-1 focus:ring-accent outline-none"
                       aria-label={`RPE Satz ${si + 1}`}
                     />
                     <button

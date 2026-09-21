@@ -143,7 +143,7 @@ export default function PlanFormModal({
                 <select
                   value={it.exerciseId}
                   onChange={(e) => updateItem(it.id, { exerciseId: e.target.value })}
-                  className="flex-1 bg-surface-overlay border border-surface-border rounded-md px-3 py-2 text-sm text-ink focus:border-accent focus:ring-1 focus:ring-accent outline-none"
+                  className="flex-1 min-w-0 bg-surface-overlay border border-surface-border rounded-md px-3 py-2 text-sm text-ink focus:border-accent focus:ring-1 focus:ring-accent outline-none"
                   aria-label="Übung auswählen"
                 >
                   {exercises
@@ -161,14 +161,14 @@ export default function PlanFormModal({
               </div>
 
               <div className="flex flex-col gap-2">
-                <div className="grid grid-cols-[1.5rem_1fr_1fr_2rem] gap-1.5 text-[11px] text-ink-faint px-1">
+                <div className="grid grid-cols-[1.5rem_minmax(0,1fr)_minmax(0,1fr)_2rem] gap-1.5 text-[11px] text-ink-faint px-1">
                   <span>Satz</span>
                   <span>Ziel-Wdh.</span>
                   <span>Zielgewicht ({unit})</span>
                   <span />
                 </div>
                 {it.targetSets.map((set, si) => (
-                  <div key={si} className="grid grid-cols-[1.5rem_1fr_1fr_2rem] gap-1.5 items-center">
+                  <div key={si} className="grid grid-cols-[1.5rem_minmax(0,1fr)_minmax(0,1fr)_2rem] gap-1.5 items-center">
                     <span className="text-sm text-ink-muted text-center">{si + 1}</span>
                     <input
                       type="number"
@@ -176,7 +176,7 @@ export default function PlanFormModal({
                       min={1}
                       value={set.reps || ''}
                       onChange={(e) => updateSet(it.id, si, { reps: Number(e.target.value) })}
-                      className="bg-surface-overlay border border-surface-border rounded-md px-2.5 py-2 text-sm text-ink focus:border-accent focus:ring-1 focus:ring-accent outline-none"
+                      className="w-full min-w-0 bg-surface-overlay border border-surface-border rounded-md px-2.5 py-2 text-sm text-ink focus:border-accent focus:ring-1 focus:ring-accent outline-none"
                       aria-label={`Ziel-Wiederholungen Satz ${si + 1}`}
                     />
                     <input
@@ -189,7 +189,7 @@ export default function PlanFormModal({
                         updateSet(it.id, si, { weight: e.target.value ? Number(e.target.value) : undefined })
                       }
                       placeholder="–"
-                      className="bg-surface-overlay border border-surface-border rounded-md px-2.5 py-2 text-sm text-ink focus:border-accent focus:ring-1 focus:ring-accent outline-none"
+                      className="w-full min-w-0 bg-surface-overlay border border-surface-border rounded-md px-2.5 py-2 text-sm text-ink focus:border-accent focus:ring-1 focus:ring-accent outline-none"
                       aria-label={`Zielgewicht Satz ${si + 1}`}
                     />
                     <button

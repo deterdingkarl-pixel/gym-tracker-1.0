@@ -36,14 +36,14 @@ export default function HeatmapCalendar({
     return Math.max(1, ...Object.values(volumeByDay));
   }, [volumeByDay]);
 
-  function intensity(key: string) {
-    if (!trainingDaySet.has(key)) return 'bg-surface-overlay';
-    if (!volumeByDay) return 'bg-accent/70';
-    const v = volumeByDay[key] ?? 0;
-    const ratio = v / maxVolume;
-    if (ratio > 0.66) return 'bg-accent';
-    if (ratio > 0.33) return 'bg-accent/60';
-    return 'bg-accent/30';
+  /** Hintergrund- und Textfarbe je Zelle (Text muss auf hellen wie dunklen Zellen lesbar bleiben). */
+  function cell(key: string, inMonth: boolean) {
+    if (!trainingDaySet.has(key)) return `bg-surface-overlay ${inMonth ? 'text-ink' : 'text-ink-faint/40'}`;
+    if (!volumeByDay) return 'bg-accent/70 text-surface';
+    const ratio = (volumeByDay[key] ?? 0) / maxVolume;
+    if (ratio > 0.66) return 'bg-accent text-surface';
+    if (ratio > 0.33) return 'bg-accent/60 text-surface';
+    return 'bg-accent/30 text-ink';
   }
 
   return (
@@ -80,9 +80,7 @@ export default function HeatmapCalendar({
             <div
               key={key}
               title={key}
-              className={`aspect-square rounded-sm flex items-center justify-center text-[11px] ${intensity(
-                key
-              )} ${inMonth ? 'text-ink' : 'text-ink-faint/40'} ${
+              className={`aspect-square rounded-sm flex items-center justify-center text-[11px] ${cell(key, inMonth)} ${
                 isToday(day) ? 'ring-1 ring-accent' : ''
               }`}
             >

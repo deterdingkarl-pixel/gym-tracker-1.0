@@ -3,8 +3,42 @@
 @tailwind utilities;
 
 @layer base {
+  /* Farb-Tokens als RGB-Kanäle (für Tailwind-Alpha wie bg-accent/30).
+     Hell = neutrales Grau, Dunkel = Schwarz mit dunklem Grau. */
+  :root {
+    --c-surface: 244 244 245;
+    --c-surface-raised: 255 255 255;
+    --c-surface-overlay: 228 228 231;
+    --c-surface-border: 212 212 216;
+    --c-ink: 24 24 27;
+    --c-ink-muted: 82 82 91;
+    --c-ink-faint: 113 113 122;
+    --c-accent: 63 63 70;
+    --c-accent-strong: 39 39 42;
+    --c-accent-soft: 228 228 231;
+    --c-warn: 194 65 12;
+    --c-good: 21 128 61;
+  }
+  html.dark {
+    --c-surface: 10 10 10;
+    --c-surface-raised: 23 23 23;
+    --c-surface-overlay: 38 38 38;
+    --c-surface-border: 58 58 58;
+    --c-ink: 244 244 245;
+    --c-ink-muted: 161 161 170;
+    --c-ink-faint: 152 152 160;
+    --c-accent: 228 228 231;
+    --c-accent-strong: 255 255 255;
+    --c-accent-soft: 58 58 63;
+    --c-warn: 251 146 60;
+    --c-good: 74 222 128;
+  }
   html {
     color-scheme: light;
+    background-color: rgb(var(--c-surface));
+  }
+  html.dark {
+    color-scheme: dark;
   }
   body {
     @apply bg-surface text-ink font-sans antialiased;

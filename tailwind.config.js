@@ -1,3 +1,9 @@
+/**
+ * Farben kommen aus CSS-Variablen (siehe src/index.css: :root = hell, .dark = dunkel),
+ * damit ein Themewechsel keine Komponente anfassen muss.
+ */
+const v = (name) => `rgb(var(--c-${name}) / <alpha-value>)`;
+
 /** @type {import('tailwindcss').Config} */
 export default {
   darkMode: 'class',
@@ -10,23 +16,23 @@ export default {
       },
       colors: {
         surface: {
-          DEFAULT: '#F4F4F5',
-          raised: '#FFFFFF',
-          overlay: '#E4E4E7',
-          border: '#D4D4D8',
+          DEFAULT: v('surface'),
+          raised: v('surface-raised'),
+          overlay: v('surface-overlay'),
+          border: v('surface-border'),
         },
         ink: {
-          DEFAULT: '#18181B',
-          muted: '#52525B',
-          faint: '#71717A',
+          DEFAULT: v('ink'),
+          muted: v('ink-muted'),
+          faint: v('ink-faint'),
         },
         accent: {
-          DEFAULT: '#3F3F46',
-          strong: '#27272A',
-          soft: '#E4E4E7',
+          DEFAULT: v('accent'),
+          strong: v('accent-strong'),
+          soft: v('accent-soft'),
         },
-        warn: '#C2410C',
-        good: '#15803D',
+        warn: v('warn'),
+        good: v('good'),
       },
       borderRadius: {
         sm: '6px',

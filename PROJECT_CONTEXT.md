@@ -51,7 +51,7 @@ Der aktuelle Fokus liegt auf dem schnellen Erfassen der drei festen Trainingskat
 * GitHub
 * Vercel
 
-Hosting und Deployment erfolgen über Vercel.
+Hosting und Deployment erfolgen über Vercel (Vercel-Projekt `gym-tracker-1.0`). Jeder Push auf `main` löst ein Production-Deployment aus — auch reine Doku-Commits.
 
 Das Repository ist aktuell:
 
@@ -78,9 +78,10 @@ Wichtige Dateien und Bereiche:
 * `tailwind.config.js` – Design-Tokens
 * `postcss.config.js`
 * `index.html` – HTML-Einstiegspunkt und Meta-/Font-Konfiguration
-* `.gitignore`
 * `README.md`
 * `supabase/schema.sql` – Supabase-Tabelle und RLS-Policies
+
+Nicht im Repository vorhanden (Stand 21.09.2026): `.gitignore`, `.env.example` (obwohl README darauf verweist), `vercel.json`, `public/` (kein Web-Manifest, keine App-Icons).
 
 ### `src/`
 
@@ -190,7 +191,7 @@ Wichtig: Jeder Satz kann eigene Wiederholungen und eigenes Gewicht besitzen.
 
 ### RepDB-Übungsdatenbank
 
-Die externe GitHub-Datenquelle `RepDB/exercise-dataset` wurde als automatische Importquelle integriert.
+Als Importquelle dient das RepDB-Dataset (kostenlose Edition), geladen von `https://exercise-dataset.com/exercises.json` (siehe `src/lib/repdbImport.ts`). Stand 21.09.2026: Endpunkt erreichbar, 601 Übungen, Felder passen zum Mapping. Die kostenlose Edition verlangt laut Datensatz Namensnennung (Lizenz „other“) — der RepDB-Hinweis in den Einstellungen muss erhalten bleiben.
 
 Ziel:
 
@@ -248,6 +249,8 @@ Der sichtbare App-Name ist:
 
 Das alte dunkle Grün-/Türkis-Design wurde auf ein **neutrales, helleres Grau** umgestellt.
 
+Zusätzlich gibt es einen **Dark Mode** (Schwarz `#0A0A0A` mit dunklem Grau), in den Einstellungen zwischen „Hell“ und „Dunkel“ umschaltbar. Hell bleibt der Standard.
+
 Aktuelles Designziel:
 
 * neutral
@@ -267,10 +270,11 @@ Mobile Nutzung hat hohe Priorität.
 * zusätzlicher Abstand zur unteren Navigation
 * Formulare auf kleinen Bildschirmen kompakter
 * Buttons dürfen umbrechen
+* **Layout-Regel gegen Überlauf:** Grid-Spalten mit Eingabefeldern immer als `minmax(0,1fr)` anlegen und die Felder mit `w-full min-w-0` versehen; Dropdowns in Flex-Zeilen brauchen `min-w-0`. Sonst drücken die festen Mindestbreiten der Felder das Layout auf dem iPhone über den Rand (so geschehen im Kategorie-Formular und in den Trainings-/Plan-Modals).
 * iOS-Zoom bei Eingabefeldern soll verhindert werden
 * mobile Web-App-/Homescreen-Nutzung wird berücksichtigt
 
-Der letzte beschriebene Mobile-/Design-Stand wurde im bisherigen Chat erstellt, aber ein erfolgreicher finaler Deployment-Test dieses letzten Updates wurde **nicht bestätigt**.
+Stand 21.09.2026: Der Mobile-/Design-Stand ist im Code (Commit `947352c`) enthalten und als Production-Deployment READY. Ein manueller Test auf dem iPhone steht noch aus.
 
 ---
 
@@ -417,6 +421,14 @@ Der persönliche Plan ist fest in `src/data/userPlan.ts` integriert.
 
 Die Prüfung erfolgt anhand des Plan-Namens, damit die Pläne nicht bei jedem Start dupliziert werden.
 
+Folge: Die Kategorie-Karten unter „Training eintragen“ werden ebenfalls über den exakten Plan-Namen gefunden (`Beine`, `Arme & Schulter`, `Brust & Rücken`). Wird ein Standardplan umbenannt, verschwindet seine Karte und der Originalplan wird beim nächsten Start neu angelegt. Wird er gelöscht, kommt er beim nächsten Start ebenfalls wieder.
+
+### Farben / Theme
+
+Farben werden ausschließlich über die Tailwind-Tokens verwendet (`bg-surface`, `text-ink`, `bg-accent`, `text-warn` …). Diese zeigen auf CSS-Variablen (`--c-*` in `src/index.css`: `:root` = hell, `html.dark` = dunkel), damit auch Alpha-Klassen wie `bg-accent/30` funktionieren. In Komponenten keine festen Hex-Farben verwenden. Diagramme (Recharts) beziehen ihre Farben über `useChartTheme()` (`src/lib/chartTheme.ts`).
+
+Das Theme liegt in `settings.theme` (wird mit der Cloud synchronisiert). `src/lib/theme.ts` setzt die Klasse `dark` am `<html>`-Element und folgt Änderungen; ein kleines Inline-Skript in `index.html` liest `iron-log:data` und setzt die Klasse schon vor dem ersten Rendern (kein heller Blitz beim Laden).
+
 ### Cloud Sync
 
 Aktuell wird ein kompletter JSON-Datensatz pro Benutzer gespeichert.
@@ -443,18 +455,16 @@ Bereits behoben:
 
 Der Nutzer sollte bei Änderungen weiterhin prüfen, dass Vercel wirklich den aktuellen `main`-Commit verwendet.
 
-### Letzter UI-Stand
+### Letzter UI-Stand (geprüft am 21.09.2026)
 
-Unbekannt bzw. nicht bestätigt:
-
-Ob die zuletzt erstellten Änderungen
+Im Repository (`main`) vorhanden und als Production-Deployment READY:
 
 * Mobile-Optimierung
-* Kategorie-Direktbearbeitung
+* Kategorie-Direktbearbeitung (`CategoryQuickLog.tsx`)
 * hellgraues Design
 * Umbenennung zu „Gym App“
 
-bereits erfolgreich in GitHub und anschließend live auf Vercel sind.
+Der lokale Build (`npm run build`) läuft erfolgreich durch. **Nicht geprüft:** tatsächliches Aussehen und Verhalten auf dem iPhone.
 
 ### Cloud-Konflikte
 
@@ -468,10 +478,22 @@ Der automatische Import dedupliziert nach Übungsnamen. Unterschiedliche Schreib
 
 Zwei Angaben aus dem persönlichen Training sind fachlich nicht vollständig eindeutig:
 
-* `Schulterdrücken Multipresse`: Satz 1 wurde als zwei Gewichtsstufen bzw. Dropsatz interpretiert.
-* `Enges Rudern / enges Latziehen`: die tatsächliche Variante war nicht eindeutig.
+* `Schulterdrücken Multipresse`: Satz 1 wurde als zwei Gewichtsstufen bzw. Dropsatz interpretiert. Im Code ist das aktuell als **drei** Zielsätze abgelegt (4×55, 6×20, 3×55); der Dropsatz-Hinweis (`PlanExercise.note`) wird in der UI nirgends angezeigt.
+* `Enges Rudern / enges Latziehen`: die tatsächliche Variante war nicht eindeutig. Im Code sind 8×86 und 5×100 hinterlegt; die Alternativen (6×66 / 4×66) sind nicht gespeichert.
 
 Diese Punkte sollen nicht ohne Rücksprache umgedeutet werden.
+
+### Bei der Analyse am 21.09.2026 gefundene technische Risiken
+
+Am Code verifiziert; Details und Priorität stehen in `TODO.md`:
+
+* **Cloud-Sync:** `fetchCloudData` liefert bei einem Ladefehler dasselbe (`null`) wie bei „keine Cloud-Daten vorhanden“. `CloudSync.tsx` lädt dann den lokalen Stand hoch und kann vorhandene Cloud-Daten überschreiben.
+* **Fortschrittsdiagramm:** Die Punkte werden nach dem Text „dd.MM“ sortiert, nicht nach echtem Datum — Reihenfolge über Monats-/Jahreswechsel hinweg ist falsch.
+* **Datum in UTC:** Mehrere Stellen erzeugen `YYYY-MM-DD` über `toISOString()` (UTC). Zwischen 0 und 1/2 Uhr deutscher Zeit landet ein Eintrag am Vortag.
+* **Beispieldaten:** Ohne vorhandenen localStorage startet die App mit Demo-Trainings und Demo-Plänen (`seedData.ts`), die Statistiken verfälschen.
+* **Standardplan-Abhängigkeit:** „Beinpresse“ ist nicht in `USER_PLAN_EXERCISES` und stammt aus den Beispiel-Übungen; fehlt sie, wird sie beim Plananlegen stillschweigend weggelassen.
+* **Import/Reset im Sync-Modus:** JSON-Import, „Auf Beispieldaten zurücksetzen“ und „Alle Daten löschen“ werden anschließend in die Cloud übertragen. Die Texte sprechen nur von „lokalen Daten“. Der JSON-Import prüft lediglich, ob `exercises` ein Array ist.
+* **Übungsauswahl:** Dropdowns listen alle Übungen (nach RepDB-Import ca. 600); `WorkoutFormModal` sortiert nicht alphabetisch.
 
 ### Energy-Drink-Angebote
 
@@ -484,7 +506,6 @@ Ein System für automatisch jede Woche recherchierte lokale Energy-Drink-Angebot
 Nach aktuellem Stand u. a.:
 
 * echte automatische Konfliktauflösung zwischen mehreren Geräten
-* echter Dark Mode
 * Drag-and-Drop bei Planübungen
 * vollständige Körpermaß-Erfassung
 * Passwort-zurücksetzen
@@ -540,14 +561,15 @@ Die App verfügt inzwischen über:
 
 Die App ist grundsätzlich als funktionsfähiges MVP aufgebaut.
 
-Der wichtigste offene Punkt vor weiteren größeren Änderungen ist die Überprüfung, ob der **zuletzt entwickelte Code tatsächlich dem aktuellen GitHub-/Vercel-Stand entspricht**.
+Der GitHub-/Vercel-Stand wurde am 21.09.2026 geprüft (siehe `CURRENT_STATE.md`): `main` und das aktuelle Production-Deployment stimmen überein. Wichtigste offene Punkte vor neuen Features: Cloud-Sync-Fehlerfall, Sortierung im Fortschrittsdiagramm, Test auf dem iPhone.
 
 ---
 
 ## 13. Nächster sinnvoller Schritt
 
-1. Aktuellen GitHub-Code analysieren.
-2. Prüfen, welche der zuletzt entwickelten UI-Änderungen tatsächlich vorhanden und live sind.
-3. `CURRENT_STATE.md` anhand des echten Codes aktualisieren.
-4. Erst danach die nächste gewünschte Funktion implementieren.
+1. ~~Aktuellen GitHub-Code analysieren~~ (erledigt 21.09.2026).
+2. ~~Prüfen, welche UI-Änderungen vorhanden und live sind~~ (erledigt 21.09.2026).
+3. Die Punkte der Priorität 1 aus `TODO.md` beheben (kleine, einzelne Schritte).
+4. Manuellen Test auf dem iPhone durchführen.
+5. Erst danach neue Funktionen umsetzen.
 

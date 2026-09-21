@@ -132,20 +132,20 @@ export default function Settings() {
             <button
               key={t}
               onClick={() => updateSettings({ theme: t })}
-              disabled={t === 'dark'}
-              className={`flex-1 px-4 py-2.5 rounded-md text-sm font-medium border disabled:opacity-40 disabled:cursor-not-allowed ${
+              aria-pressed={settings.theme === t}
+              className={`flex-1 px-4 py-2.5 rounded-md text-sm font-medium border ${
                 settings.theme === t
                   ? 'bg-accent-soft text-accent border-accent/30'
                   : 'bg-surface-overlay text-ink-muted border-surface-border hover:text-ink'
               }`}
             >
-              {t === 'light' ? 'Hell (neutral)' : 'Dunkel (bald verfügbar)'}
+              {t === 'light' ? 'Hell (neutrales Grau)' : 'Dunkel (Schwarz & Grau)'}
             </button>
           ))}
         </div>
         <p className="text-xs text-ink-faint">
-          Der Dunkelmodus ist als nächster Ausbauschritt vorgesehen — die Farbtoken sind bereits so aufgebaut, dass ein
-          zweites Theme ergänzt werden kann.
+          Die Auswahl gehört zu den Einstellungen und wird mit der Cloud synchronisiert — sie gilt also auf allen
+          Geräten, auf denen du angemeldet bist.
         </p>
       </Card>
 

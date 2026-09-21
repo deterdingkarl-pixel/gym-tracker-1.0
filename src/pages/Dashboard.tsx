@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useAppStore } from '@/store/useAppStore';
+import { useChartTheme } from '@/lib/chartTheme';
 import StatCard from '@/components/StatCard';
 import HeatmapCalendar from '@/components/HeatmapCalendar';
 import { Card, Button, EmptyState } from '@/components/ui/Primitives';
@@ -29,6 +30,7 @@ export default function Dashboard() {
   const workouts = useAppStore((s) => s.workouts);
   const exercises = useAppStore((s) => s.exercises);
   const unit = useAppStore((s) => s.settings.weightUnit);
+  const c = useChartTheme();
 
   const days = useMemo(() => trainingDays(workouts), [workouts]);
   const daySet = useMemo(() => new Set(days), [days]);
@@ -146,15 +148,14 @@ export default function Dashboard() {
           <h2 className="text-sm font-semibold text-ink mb-3">Trainingsvolumen pro Woche</h2>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={weeklyChartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#D4D4D8" vertical={false} />
-              <XAxis dataKey="label" stroke="#71717A" fontSize={12} />
-              <YAxis stroke="#71717A" fontSize={12} width={40} />
+              <CartesianGrid strokeDasharray="3 3" stroke={c.grid} vertical={false} />
+              <XAxis dataKey="label" stroke={c.axis} fontSize={12} />
+              <YAxis stroke={c.axis} fontSize={12} width={40} />
               <Tooltip
-                contentStyle={{ background: '#FFFFFF', border: '1px solid #D4D4D8', borderRadius: 8 }}
-                labelStyle={{ color: '#18181B' }}
+                {...c.tooltip}
                 formatter={(value: number) => [`${value} ${unit}`, 'Volumen']}
               />
-              <Bar dataKey="volume" fill="#3F3F46" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="volume" fill={c.primary} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </Card>
