@@ -161,14 +161,14 @@ export default function PlanFormModal({
               </div>
 
               <div className="flex flex-col gap-2">
-                <div className="grid grid-cols-[2rem_1fr_1fr_2.5rem] gap-2 text-[11px] text-ink-faint px-1">
+                <div className="grid grid-cols-[1.5rem_1fr_1fr_2rem] gap-1.5 text-[11px] text-ink-faint px-1">
                   <span>Satz</span>
                   <span>Ziel-Wdh.</span>
                   <span>Zielgewicht ({unit})</span>
                   <span />
                 </div>
                 {it.targetSets.map((set, si) => (
-                  <div key={si} className="grid grid-cols-[2rem_1fr_1fr_2.5rem] gap-2 items-center">
+                  <div key={si} className="grid grid-cols-[1.5rem_1fr_1fr_2rem] gap-1.5 items-center">
                     <span className="text-sm text-ink-muted text-center">{si + 1}</span>
                     <input
                       type="number"

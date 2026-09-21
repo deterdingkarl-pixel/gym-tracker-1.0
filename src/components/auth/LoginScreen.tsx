@@ -33,7 +33,7 @@ export default function LoginScreen({ onGuest }: { onGuest: () => void }) {
           <div className="w-10 h-10 rounded-md bg-accent-soft flex items-center justify-center">
             <Dumbbell size={20} className="text-accent" />
           </div>
-          <h1 className="text-lg font-semibold">Iron Log</h1>
+          <h1 className="text-lg font-semibold">Gym App</h1>
           <p className="text-sm text-ink-muted flex items-center gap-1.5">
             <Cloud size={14} /> Melde dich an, um deine Trainings geräteübergreifend zu synchronisieren.
           </p>

@@ -128,26 +128,27 @@ export default function Settings() {
       <Card className="p-5 flex flex-col gap-4">
         <h2 className="text-sm font-semibold text-ink">Darstellung</h2>
         <div className="flex gap-2">
-          {(['dark', 'light'] as const).map((t) => (
+          {(['light', 'dark'] as const).map((t) => (
             <button
               key={t}
               onClick={() => updateSettings({ theme: t })}
-              disabled={t === 'light'}
+              disabled={t === 'dark'}
               className={`flex-1 px-4 py-2.5 rounded-md text-sm font-medium border disabled:opacity-40 disabled:cursor-not-allowed ${
                 settings.theme === t
                   ? 'bg-accent-soft text-accent border-accent/30'
                   : 'bg-surface-overlay text-ink-muted border-surface-border hover:text-ink'
               }`}
             >
-              {t === 'dark' ? 'Dunkel' : 'Hell (bald verfügbar)'}
+              {t === 'light' ? 'Hell (neutral)' : 'Dunkel (bald verfügbar)'}
             </button>
           ))}
         </div>
         <p className="text-xs text-ink-faint">
-          Der Hellmodus ist als nächster Ausbauschritt vorgesehen — die Farbtoken sind bereits so aufgebaut, dass ein
+          Der Dunkelmodus ist als nächster Ausbauschritt vorgesehen — die Farbtoken sind bereits so aufgebaut, dass ein
           zweites Theme ergänzt werden kann.
         </p>
       </Card>
+
 
       <Card className="p-5 flex flex-col gap-4">
         <h2 className="text-sm font-semibold text-ink flex items-center gap-2">

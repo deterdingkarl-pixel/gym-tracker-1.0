@@ -203,12 +203,12 @@ export default function Progress() {
               <p className="text-xs text-ink-faint mb-2">Geschätztes 1RM &amp; Gewicht ({unit})</p>
               <ResponsiveContainer width="100%" height={200}>
                 <LineChart data={exerciseSeries}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#26332C" vertical={false} />
-                  <XAxis dataKey="date" stroke="#5E7267" fontSize={11} />
-                  <YAxis stroke="#5E7267" fontSize={11} width={36} />
-                  <Tooltip contentStyle={{ background: '#1D2721', border: '1px solid #26332C', borderRadius: 8 }} />
-                  <Line type="monotone" dataKey="est1rm" stroke="#5EEAD4" strokeWidth={2} dot={false} name="Geschätztes 1RM" />
-                  <Line type="monotone" dataKey="weight" stroke="#F5A97F" strokeWidth={2} dot={false} name="Top-Satz Gewicht" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#D4D4D8" vertical={false} />
+                  <XAxis dataKey="date" stroke="#71717A" fontSize={11} />
+                  <YAxis stroke="#71717A" fontSize={11} width={36} />
+                  <Tooltip contentStyle={{ background: '#FFFFFF', border: '1px solid #D4D4D8', borderRadius: 8 }} />
+                  <Line type="monotone" dataKey="est1rm" stroke="#3F3F46" strokeWidth={2} dot={false} name="Geschätztes 1RM" />
+                  <Line type="monotone" dataKey="weight" stroke="#A1A1AA" strokeWidth={2} dot={false} name="Top-Satz Gewicht" />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -216,11 +216,11 @@ export default function Progress() {
               <p className="text-xs text-ink-faint mb-2">Volumen pro Einheit ({unit})</p>
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={exerciseSeries}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#26332C" vertical={false} />
-                  <XAxis dataKey="date" stroke="#5E7267" fontSize={11} />
-                  <YAxis stroke="#5E7267" fontSize={11} width={36} />
-                  <Tooltip contentStyle={{ background: '#1D2721', border: '1px solid #26332C', borderRadius: 8 }} />
-                  <Bar dataKey="volume" fill="#2DD4BF" radius={[4, 4, 0, 0]} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#D4D4D8" vertical={false} />
+                  <XAxis dataKey="date" stroke="#71717A" fontSize={11} />
+                  <YAxis stroke="#71717A" fontSize={11} width={36} />
+                  <Tooltip contentStyle={{ background: '#FFFFFF', border: '1px solid #D4D4D8', borderRadius: 8 }} />
+                  <Bar dataKey="volume" fill="#52525B" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -237,11 +237,11 @@ export default function Progress() {
           <h2 className="text-sm font-semibold text-ink mb-3">Trainingstage nach Wochentag</h2>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={weekdayData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#26332C" vertical={false} />
-              <XAxis dataKey="day" stroke="#5E7267" fontSize={12} />
-              <YAxis stroke="#5E7267" fontSize={12} width={30} allowDecimals={false} />
-              <Tooltip contentStyle={{ background: '#1D2721', border: '1px solid #26332C', borderRadius: 8 }} />
-              <Bar dataKey="count" fill="#5EEAD4" radius={[4, 4, 0, 0]} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#D4D4D8" vertical={false} />
+              <XAxis dataKey="day" stroke="#71717A" fontSize={12} />
+              <YAxis stroke="#71717A" fontSize={12} width={30} allowDecimals={false} />
+              <Tooltip contentStyle={{ background: '#FFFFFF', border: '1px solid #D4D4D8', borderRadius: 8 }} />
+              <Bar dataKey="count" fill="#3F3F46" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </Card>
@@ -270,11 +270,11 @@ export default function Progress() {
         ) : (
           <ResponsiveContainer width="100%" height={180}>
             <LineChart data={bodyWeightSeries}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#26332C" vertical={false} />
-              <XAxis dataKey="date" stroke="#5E7267" fontSize={11} />
-              <YAxis stroke="#5E7267" fontSize={11} width={36} domain={['auto', 'auto']} />
-              <Tooltip contentStyle={{ background: '#1D2721', border: '1px solid #26332C', borderRadius: 8 }} />
-              <Line type="monotone" dataKey="weight" stroke="#86EFAC" strokeWidth={2} dot={{ r: 3 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#D4D4D8" vertical={false} />
+              <XAxis dataKey="date" stroke="#71717A" fontSize={11} />
+              <YAxis stroke="#71717A" fontSize={11} width={36} domain={['auto', 'auto']} />
+              <Tooltip contentStyle={{ background: '#FFFFFF', border: '1px solid #D4D4D8', borderRadius: 8 }} />
+              <Line type="monotone" dataKey="weight" stroke="#52525B" strokeWidth={2} dot={{ r: 3 }} />
             </LineChart>
           </ResponsiveContainer>
         )}

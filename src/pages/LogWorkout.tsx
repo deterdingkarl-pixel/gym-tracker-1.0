@@ -2,14 +2,23 @@ import React, { useMemo, useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { Card, Button, Badge, EmptyState } from '@/components/ui/Primitives';
 import WorkoutFormModal from '@/components/WorkoutFormModal';
+import CategoryQuickLog from '@/components/CategoryQuickLog';
 import { Workout } from '@/types';
 import { workoutVolume } from '@/lib/calculations';
 import { format, parseISO } from 'date-fns';
-import { PlusCircle, Pencil, Copy, Trash2, ChevronDown } from 'lucide-react';
+import { PlusCircle, Pencil, Copy, Trash2, ChevronDown, Footprints, Dumbbell, Activity } from 'lucide-react';
+
+/** Feste Reihenfolge und Icons für die drei Standard-Kategorien. */
+const CATEGORY_ORDER: { name: string; icon: typeof Dumbbell }[] = [
+  { name: 'Beine', icon: Footprints },
+  { name: 'Arme & Schulter', icon: Dumbbell },
+  { name: 'Brust & Rücken', icon: Activity },
+];
 
 export default function LogWorkout() {
   const workouts = useAppStore((s) => s.workouts);
   const exercises = useAppStore((s) => s.exercises);
+  const plans = useAppStore((s) => s.plans);
   const unit = useAppStore((s) => s.settings.weightUnit);
   const duplicateWorkout = useAppStore((s) => s.duplicateWorkout);
   const deleteWorkout = useAppStore((s) => s.deleteWorkout);
@@ -18,6 +27,18 @@ export default function LogWorkout() {
   const [editing, setEditing] = useState<Workout | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [activeCategoryPlanId, setActiveCategoryPlanId] = useState<string | null>(null);
+
+  const categoryCards = useMemo(
+    () =>
+      CATEGORY_ORDER.map((c) => ({
+        ...c,
+        plan: plans.find((p) => p.name.trim().toLowerCase() === c.name.trim().toLowerCase()),
+      })).filter((c) => c.plan),
+    [plans]
+  );
+
+  const activePlan = plans.find((p) => p.id === activeCategoryPlanId) ?? null;
 
   const sorted = useMemo(
     () => [...workouts].sort((a, b) => (a.date < b.date ? 1 : -1)),
@@ -44,23 +65,41 @@ export default function LogWorkout() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Training eintragen</h1>
           <p className="text-sm text-ink-muted mt-1">
-            Erfasse vergangene Trainingseinheiten nachträglich – kein Live-Modus, kein Timer.
+            Kategorie wählen und direkt eintippen — alles sofort bearbeitbar, kein Timer, kein Live-Modus.
           </p>
         </div>
-        <Button onClick={openNew}>
-          <PlusCircle size={18} /> Neues Training
+        <Button variant="secondary" onClick={openNew}>
+          <PlusCircle size={18} /> Freies Training
         </Button>
       </div>
+
+      {categoryCards.length > 0 && (
+        <div className="grid grid-cols-3 gap-3">
+          {categoryCards.map(({ name, icon: Icon, plan }) => (
+            <button
+              key={plan!.id}
+              onClick={() => setActiveCategoryPlanId(activeCategoryPlanId === plan!.id ? null : plan!.id)}
+              className={`flex flex-col items-center justify-center gap-2 rounded-lg border p-4 text-center transition-colors ${
+                activeCategoryPlanId === plan!.id
+                  ? 'bg-accent-soft border-accent/30 text-accent'
+                  : 'bg-surface-raised border-surface-border text-ink hover:bg-surface-overlay'
+              }`}
+            >
+              <Icon size={22} />
+              <span className="text-sm font-medium leading-tight">{name}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {activePlan && (
+        <CategoryQuickLog plan={activePlan} onClose={() => setActiveCategoryPlanId(null)} />
+      )}
 
       {sorted.length === 0 ? (
         <EmptyState
           title="Noch keine Trainings erfasst"
-          description="Trage dein erstes Training ein: Datum wählen, Übungen und Sätze hinzufügen."
-          action={
-            <Button onClick={openNew}>
-              <PlusCircle size={18} /> Training eintragen
-            </Button>
-          }
+          description="Wähle oben eine Kategorie oder trage ein freies Training ein."
         />
       ) : (
         <div className="flex flex-col gap-3">
@@ -102,7 +141,7 @@ export default function LogWorkout() {
 
                 {isOpen && (
                   <div className="px-4 pb-4 flex flex-col gap-3 border-t border-surface-border pt-3">
-                    {w.note && <p className="text-sm text-ink-muted italic">„{w.note}“</p>}
+                    {w.note && <p className="text-sm text-ink-muted italic">„{w.note}"</p>}
                     <div className="flex flex-col gap-2">
                       {w.exercises.map((ex) => (
                         <div key={ex.id} className="text-sm">
@@ -122,7 +161,7 @@ export default function LogWorkout() {
                         </div>
                       ))}
                     </div>
-                    <div className="flex gap-2 pt-2">
+                    <div className="flex gap-2 pt-2 flex-wrap">
                       <Button size="sm" variant="secondary" onClick={() => openEdit(w)}>
                         <Pencil size={14} /> Bearbeiten
                       </Button>

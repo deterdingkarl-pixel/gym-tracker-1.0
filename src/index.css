@@ -4,7 +4,7 @@
 
 @layer base {
   html {
-    color-scheme: dark;
+    color-scheme: light;
   }
   body {
     @apply bg-surface text-ink font-sans antialiased;
@@ -16,6 +16,16 @@
     outline: 2px solid theme('colors.accent.DEFAULT');
     outline-offset: 2px;
     border-radius: 4px;
+  }
+  /* iOS Safari zoomt beim Fokussieren eines Eingabefelds automatisch hinein, wenn dessen
+     Schriftgröße unter 16px liegt — das wirkt wie ein Anzeigefehler. Auf kleinen Screens
+     daher für alle Formularfelder mindestens 16px erzwingen. */
+  @media (max-width: 640px) {
+    input,
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
   }
 }
 

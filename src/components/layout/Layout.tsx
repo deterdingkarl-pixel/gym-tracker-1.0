@@ -27,7 +27,7 @@ export default function Layout() {
           <div className="w-8 h-8 rounded-md bg-accent-soft flex items-center justify-center">
             <Dumbbell size={18} className="text-accent" />
           </div>
-          <span className="font-semibold text-lg tracking-tight">Iron Log</span>
+          <span className="font-semibold text-lg tracking-tight">Gym App</span>
         </div>
         <nav className="flex flex-col gap-1" aria-label="Hauptnavigation">
           {NAV_ITEMS.map((item) => (
@@ -52,20 +52,25 @@ export default function Layout() {
 
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile top bar */}
-        <header className="md:hidden flex items-center gap-2 px-4 py-3 border-b border-surface-border bg-surface-raised sticky top-0 z-30">
-          <div className="w-7 h-7 rounded-md bg-accent-soft flex items-center justify-center">
+        <header
+          className="md:hidden flex items-center gap-2 px-4 py-3 border-b border-surface-border bg-surface-raised sticky top-0 z-30"
+          style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top, 0px))' }}
+        >
+          <div className="w-7 h-7 rounded-md bg-accent-soft flex items-center justify-center shrink-0">
             <Dumbbell size={16} className="text-accent" />
           </div>
-          <span className="font-semibold">Iron Log</span>
+          <span className="font-semibold truncate">Gym App</span>
         </header>
 
-        <main className="flex-1 px-4 py-6 md:px-8 md:py-8 pb-24 md:pb-8 max-w-6xl w-full mx-auto">
+        <main className="flex-1 px-4 py-6 md:px-8 md:py-8 pb-24 md:pb-8 max-w-6xl w-full mx-auto overflow-x-hidden">
           <Outlet />
         </main>
 
-        {/* Mobile bottom nav */}
+        {/* Mobile bottom nav — icon-only, damit lange Begriffe (z.B. "Trainingspläne") auf schmalen
+            Displays nicht umbrechen oder überlaufen. Beschriftung bleibt für Screenreader erhalten. */}
         <nav
-          className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-surface-raised border-t border-surface-border flex justify-around py-2"
+          className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-surface-raised border-t border-surface-border flex justify-around"
+          style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom, 0px))', paddingTop: '0.5rem' }}
           aria-label="Hauptnavigation"
         >
           {NAV_ITEMS.map((item) => (
@@ -73,14 +78,15 @@ export default function Layout() {
               key={item.to}
               to={item.to}
               end={item.end}
+              aria-label={item.label}
               className={({ isActive }) =>
-                `flex flex-col items-center gap-0.5 px-2 py-1 rounded-md text-[11px] font-medium ${
-                  isActive ? 'text-accent' : 'text-ink-faint'
+                `flex items-center justify-center w-11 h-11 rounded-md ${
+                  isActive ? 'text-accent bg-accent-soft' : 'text-ink-faint'
                 }`
               }
             >
-              <item.icon size={20} />
-              {item.label.split(' ')[0]}
+              <item.icon size={22} />
+              <span className="sr-only">{item.label}</span>
             </NavLink>
           ))}
         </nav>

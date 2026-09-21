@@ -1,4 +1,4 @@
-# Iron Log — Krafttraining-Tracker (MVP)
+# Gym App — Krafttraining-Tracker (MVP)
 
 Eine lokale Web-App zum nachträglichen Eintragen von Krafttraining, Verwalten von
 Übungen und Trainingsplänen, sowie zum Auswerten deines Fortschritts.

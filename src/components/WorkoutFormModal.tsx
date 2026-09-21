@@ -243,7 +243,7 @@ export default function WorkoutFormModal({
               </div>
 
               <div className="flex flex-col gap-2">
-                <div className="grid grid-cols-[2rem_1fr_1fr_1fr_2.5rem] gap-2 text-[11px] text-ink-faint px-1">
+                <div className="grid grid-cols-[1.5rem_1fr_1fr_1fr_2rem] gap-1.5 text-[11px] text-ink-faint px-1">
                   <span>Satz</span>
                   <span>Gewicht ({unit})</span>
                   <span>Wdh.</span>
@@ -251,7 +251,7 @@ export default function WorkoutFormModal({
                   <span />
                 </div>
                 {de.sets.map((set, si) => (
-                  <div key={set.id} className="grid grid-cols-[2rem_1fr_1fr_1fr_2.5rem] gap-2 items-center">
+                  <div key={set.id} className="grid grid-cols-[1.5rem_1fr_1fr_1fr_2rem] gap-1.5 items-center">
                     <span className="text-sm text-ink-muted text-center">{si + 1}</span>
                     <input
                       type="number"

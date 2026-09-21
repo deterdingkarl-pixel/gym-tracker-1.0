@@ -144,7 +144,7 @@ export function Modal({
   const widths = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-2xl' }[width];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
@@ -156,7 +156,7 @@ export function Modal({
         aria-labelledby="modal-title"
         className={`relative w-full ${widths} max-h-[90vh] overflow-y-auto bg-surface-raised border border-surface-border rounded-lg shadow-card`}
       >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-surface-border sticky top-0 bg-surface-raised">
+        <div className="flex items-center justify-between px-4 py-3 sm:px-5 sm:py-4 border-b border-surface-border sticky top-0 bg-surface-raised">
           <h2 id="modal-title" className="text-lg font-semibold">
             {title}
           </h2>
@@ -168,7 +168,7 @@ export function Modal({
             <X size={18} />
           </button>
         </div>
-        <div className="p-5">{children}</div>
+        <div className="p-4 sm:p-5">{children}</div>
       </div>
     </div>
   );

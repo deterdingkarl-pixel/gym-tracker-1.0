@@ -110,7 +110,7 @@ export default function Dashboard() {
           <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
           <p className="text-sm text-ink-muted mt-1">Dein Trainingsüberblick auf einen Blick.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Link to="/training-eintragen">
             <Button size="sm">
               <PlusCircle size={16} /> Training eintragen
@@ -146,15 +146,15 @@ export default function Dashboard() {
           <h2 className="text-sm font-semibold text-ink mb-3">Trainingsvolumen pro Woche</h2>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={weeklyChartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#26332C" vertical={false} />
-              <XAxis dataKey="label" stroke="#5E7267" fontSize={12} />
-              <YAxis stroke="#5E7267" fontSize={12} width={40} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#D4D4D8" vertical={false} />
+              <XAxis dataKey="label" stroke="#71717A" fontSize={12} />
+              <YAxis stroke="#71717A" fontSize={12} width={40} />
               <Tooltip
-                contentStyle={{ background: '#1D2721', border: '1px solid #26332C', borderRadius: 8 }}
-                labelStyle={{ color: '#EAF0EC' }}
+                contentStyle={{ background: '#FFFFFF', border: '1px solid #D4D4D8', borderRadius: 8 }}
+                labelStyle={{ color: '#18181B' }}
                 formatter={(value: number) => [`${value} ${unit}`, 'Volumen']}
               />
-              <Bar dataKey="volume" fill="#5EEAD4" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="volume" fill="#3F3F46" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </Card>

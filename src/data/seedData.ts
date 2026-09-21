@@ -320,6 +320,6 @@ export function buildSeedData(): AppData {
     plans,
     workouts,
     bodyMetrics: [],
-    settings: { weightUnit: 'kg', theme: 'dark' },
+    settings: { weightUnit: 'kg', theme: 'light' },
   };
 }
