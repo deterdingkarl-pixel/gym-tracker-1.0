@@ -1,5 +1,5 @@
 import { v4 as uuid } from 'uuid';
-import { AppData, Exercise, Workout, WorkoutPlan } from '@/types';
+import { AppData, Exercise, PlanSetTarget, Workout, WorkoutPlan } from '@/types';
 
 const now = new Date().toISOString();
 
@@ -97,10 +97,14 @@ export function buildSeedExercises(): Exercise[] {
 export function buildSeedPlans(exercises: Exercise[]): WorkoutPlan[] {
   const byName = (name: string) => exercises.find((e) => e.name === name)!.id;
 
+  /** Erzeugt für jeden Satz denselben Zielwert (für die generischen Beispielpläne ausreichend). */
+  const uniform = (count: number, reps: number, weight?: number): PlanSetTarget[] =>
+    Array.from({ length: count }, () => ({ reps, weight }));
+
   const makePlan = (
     name: string,
     type: string,
-    items: { name: string; sets: number; reps: number; weight?: number }[],
+    items: { name: string; targetSets: PlanSetTarget[] }[],
     favorite: boolean
   ): WorkoutPlan => ({
     id: uuid(),
@@ -113,9 +117,7 @@ export function buildSeedPlans(exercises: Exercise[]): WorkoutPlan[] {
       id: uuid(),
       exerciseId: byName(it.name),
       order: idx,
-      targetSets: it.sets,
-      targetReps: it.reps,
-      targetWeight: it.weight,
+      targetSets: it.targetSets,
     })),
   });
 
@@ -124,9 +126,9 @@ export function buildSeedPlans(exercises: Exercise[]): WorkoutPlan[] {
       'Push Day',
       'Push',
       [
-        { name: 'Bankdrücken', sets: 4, reps: 8, weight: 70 },
-        { name: 'Schulterdrücken', sets: 3, reps: 10, weight: 40 },
-        { name: 'Bizepscurls', sets: 3, reps: 12, weight: 14 },
+        { name: 'Bankdrücken', targetSets: uniform(4, 8, 70) },
+        { name: 'Schulterdrücken', targetSets: uniform(3, 10, 40) },
+        { name: 'Bizepscurls', targetSets: uniform(3, 12, 14) },
       ],
       true
     ),
@@ -134,18 +136,18 @@ export function buildSeedPlans(exercises: Exercise[]): WorkoutPlan[] {
       'Pull Day',
       'Pull',
       [
-        { name: 'Kreuzheben', sets: 3, reps: 5, weight: 100 },
-        { name: 'Klimmzüge', sets: 4, reps: 8 },
-        { name: 'Rudern vorgebeugt', sets: 3, reps: 10, weight: 50 },
+        { name: 'Kreuzheben', targetSets: uniform(3, 5, 100) },
+        { name: 'Klimmzüge', targetSets: uniform(4, 8) },
+        { name: 'Rudern vorgebeugt', targetSets: uniform(3, 10, 50) },
       ],
       true
     ),
     makePlan(
-      'Beine',
+      'Beispiel: Beine',
       'Beine',
       [
-        { name: 'Kniebeuge', sets: 4, reps: 6, weight: 90 },
-        { name: 'Beinpresse', sets: 3, reps: 12, weight: 140 },
+        { name: 'Kniebeuge', targetSets: uniform(4, 6, 90) },
+        { name: 'Beinpresse', targetSets: uniform(3, 12, 140) },
       ],
       false
     ),
@@ -153,9 +155,9 @@ export function buildSeedPlans(exercises: Exercise[]): WorkoutPlan[] {
       'Ganzkörper',
       'Ganzkörper',
       [
-        { name: 'Kniebeuge', sets: 3, reps: 8, weight: 80 },
-        { name: 'Bankdrücken', sets: 3, reps: 8, weight: 65 },
-        { name: 'Rudern vorgebeugt', sets: 3, reps: 10, weight: 45 },
+        { name: 'Kniebeuge', targetSets: uniform(3, 8, 80) },
+        { name: 'Bankdrücken', targetSets: uniform(3, 8, 65) },
+        { name: 'Rudern vorgebeugt', targetSets: uniform(3, 10, 45) },
       ],
       false
     ),

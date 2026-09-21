@@ -80,10 +80,10 @@ export default function WorkoutFormModal({
         .map((pe) => ({
           key: uuid(),
           exerciseId: pe.exerciseId,
-          sets: Array.from({ length: pe.targetSets }, () => ({
+          sets: pe.targetSets.map((ts) => ({
             id: uuid(),
-            weight: pe.targetWeight ?? 0,
-            reps: pe.targetReps,
+            weight: ts.weight ?? 0,
+            reps: ts.reps,
           })),
         }))
     );

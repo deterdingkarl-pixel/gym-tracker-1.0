@@ -11,6 +11,7 @@ import LoginScreen from '@/components/auth/LoginScreen';
 import CloudSync from '@/components/CloudSync';
 import { useAuthStore } from '@/store/useAuthStore';
 import { isSupabaseConfigured } from '@/lib/supabaseClient';
+import { ensureDefaultTrainingPlanSeeded, ensureRepDbAutoImported } from '@/lib/defaultPlanSeed';
 
 const GUEST_MODE_KEY = 'iron-log:guest-mode';
 
@@ -38,6 +39,16 @@ export default function App() {
   useEffect(() => {
     if (isSupabaseConfigured) init();
   }, [init]);
+
+  // Rein lokaler Modus (keine Cloud konfiguriert, oder bewusst ohne Login): sofort einmalig seeden,
+  // da hier keine asynchrone Cloud-Hydration abzuwarten ist (das übernimmt sonst CloudSync).
+  useEffect(() => {
+    if (!isSupabaseConfigured || (guestMode && !user)) {
+      ensureDefaultTrainingPlanSeeded();
+      void ensureRepDbAutoImported();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [guestMode, user]);
 
   // Keine Cloud-Synchronisierung konfiguriert: App verhält sich wie zuvor, rein lokal.
   if (!isSupabaseConfigured) {

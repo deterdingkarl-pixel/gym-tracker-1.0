@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { v4 as uuid } from 'uuid';
 import { useAppStore } from '@/store/useAppStore';
-import { Modal, Button, Input, Textarea } from '@/components/ui/Primitives';
-import { PlanExercise, WorkoutPlan } from '@/types';
+import { Modal, Button, Input } from '@/components/ui/Primitives';
+import { PlanExercise, PlanSetTarget, WorkoutPlan } from '@/types';
 import { Plus, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
 
 export default function PlanFormModal({
@@ -44,8 +44,7 @@ export default function PlanFormModal({
         id: uuid(),
         exerciseId: exercises[0].id,
         order: prev.length,
-        targetSets: 3,
-        targetReps: 10,
+        targetSets: [{ reps: 10, weight: undefined }],
       },
     ]);
   }
@@ -69,10 +68,43 @@ export default function PlanFormModal({
     });
   }
 
+  function addSet(itemId: string) {
+    setItems((prev) =>
+      prev.map((it) => {
+        if (it.id !== itemId) return it;
+        const last = it.targetSets[it.targetSets.length - 1];
+        return { ...it, targetSets: [...it.targetSets, { ...last }] };
+      })
+    );
+  }
+
+  function updateSet(itemId: string, setIdx: number, patch: Partial<PlanSetTarget>) {
+    setItems((prev) =>
+      prev.map((it) =>
+        it.id === itemId
+          ? { ...it, targetSets: it.targetSets.map((s, i) => (i === setIdx ? { ...s, ...patch } : s)) }
+          : it
+      )
+    );
+  }
+
+  function removeSet(itemId: string, setIdx: number) {
+    setItems((prev) =>
+      prev.map((it) =>
+        it.id === itemId ? { ...it, targetSets: it.targetSets.filter((_, i) => i !== setIdx) } : it
+      )
+    );
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim() || items.length === 0) return;
-    const payload = { name: name.trim(), type: type.trim() || 'Individuell', exercises: items, isFavorite: editingPlan?.isFavorite ?? false };
+    const payload = {
+      name: name.trim(),
+      type: type.trim() || 'Individuell',
+      exercises: items,
+      isFavorite: editingPlan?.isFavorite ?? false,
+    };
     if (editingPlan) {
       updatePlan(editingPlan.id, payload);
     } else {
@@ -98,7 +130,7 @@ export default function PlanFormModal({
           </div>
           {items.length === 0 && <p className="text-sm text-ink-muted">Noch keine Übungen im Plan.</p>}
           {items.map((it, idx) => (
-            <div key={it.id} className="border border-surface-border rounded-md p-3 flex flex-col gap-2">
+            <div key={it.id} className="border border-surface-border rounded-md p-3 flex flex-col gap-3">
               <div className="flex items-center gap-2">
                 <div className="flex flex-col">
                   <button type="button" onClick={() => move(it.id, -1)} disabled={idx === 0} aria-label="Nach oben verschieben" className="text-ink-faint hover:text-ink disabled:opacity-30">
@@ -114,50 +146,66 @@ export default function PlanFormModal({
                   className="flex-1 bg-surface-overlay border border-surface-border rounded-md px-3 py-2 text-sm text-ink focus:border-accent focus:ring-1 focus:ring-accent outline-none"
                   aria-label="Übung auswählen"
                 >
-                  {exercises.map((ex) => (
-                    <option key={ex.id} value={ex.id}>
-                      {ex.name}
-                    </option>
-                  ))}
+                  {exercises
+                    .slice()
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .map((ex) => (
+                      <option key={ex.id} value={ex.id}>
+                        {ex.name}
+                      </option>
+                    ))}
                 </select>
                 <button type="button" onClick={() => removeItem(it.id)} aria-label="Übung entfernen" className="p-2 text-ink-faint hover:text-warn rounded-md hover:bg-surface-overlay">
                   <Trash2 size={16} />
                 </button>
               </div>
-              <div className="grid grid-cols-3 gap-2">
-                <label className="flex flex-col gap-1">
-                  <span className="text-[11px] text-ink-faint">Sätze</span>
-                  <input
-                    type="number"
-                    min={1}
-                    value={it.targetSets}
-                    onChange={(e) => updateItem(it.id, { targetSets: Number(e.target.value) })}
-                    className="bg-surface-overlay border border-surface-border rounded-md px-2.5 py-2 text-sm text-ink focus:border-accent focus:ring-1 focus:ring-accent outline-none"
-                  />
-                </label>
-                <label className="flex flex-col gap-1">
-                  <span className="text-[11px] text-ink-faint">Ziel-Wdh.</span>
-                  <input
-                    type="number"
-                    min={1}
-                    value={it.targetReps}
-                    onChange={(e) => updateItem(it.id, { targetReps: Number(e.target.value) })}
-                    className="bg-surface-overlay border border-surface-border rounded-md px-2.5 py-2 text-sm text-ink focus:border-accent focus:ring-1 focus:ring-accent outline-none"
-                  />
-                </label>
-                <label className="flex flex-col gap-1">
-                  <span className="text-[11px] text-ink-faint">Zielgewicht ({unit})</span>
-                  <input
-                    type="number"
-                    min={0}
-                    step="0.5"
-                    value={it.targetWeight ?? ''}
-                    onChange={(e) =>
-                      updateItem(it.id, { targetWeight: e.target.value ? Number(e.target.value) : undefined })
-                    }
-                    className="bg-surface-overlay border border-surface-border rounded-md px-2.5 py-2 text-sm text-ink focus:border-accent focus:ring-1 focus:ring-accent outline-none"
-                  />
-                </label>
+
+              <div className="flex flex-col gap-2">
+                <div className="grid grid-cols-[2rem_1fr_1fr_2.5rem] gap-2 text-[11px] text-ink-faint px-1">
+                  <span>Satz</span>
+                  <span>Ziel-Wdh.</span>
+                  <span>Zielgewicht ({unit})</span>
+                  <span />
+                </div>
+                {it.targetSets.map((set, si) => (
+                  <div key={si} className="grid grid-cols-[2rem_1fr_1fr_2.5rem] gap-2 items-center">
+                    <span className="text-sm text-ink-muted text-center">{si + 1}</span>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      min={1}
+                      value={set.reps || ''}
+                      onChange={(e) => updateSet(it.id, si, { reps: Number(e.target.value) })}
+                      className="bg-surface-overlay border border-surface-border rounded-md px-2.5 py-2 text-sm text-ink focus:border-accent focus:ring-1 focus:ring-accent outline-none"
+                      aria-label={`Ziel-Wiederholungen Satz ${si + 1}`}
+                    />
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      step="0.5"
+                      min={0}
+                      value={set.weight ?? ''}
+                      onChange={(e) =>
+                        updateSet(it.id, si, { weight: e.target.value ? Number(e.target.value) : undefined })
+                      }
+                      placeholder="–"
+                      className="bg-surface-overlay border border-surface-border rounded-md px-2.5 py-2 text-sm text-ink focus:border-accent focus:ring-1 focus:ring-accent outline-none"
+                      aria-label={`Zielgewicht Satz ${si + 1}`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeSet(it.id, si)}
+                      disabled={it.targetSets.length <= 1}
+                      aria-label={`Satz ${si + 1} entfernen`}
+                      className="p-2 text-ink-faint hover:text-warn rounded-md hover:bg-surface-overlay justify-self-center disabled:opacity-30"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))}
+                <Button type="button" size="sm" variant="ghost" onClick={() => addSet(it.id)} className="self-start">
+                  <Plus size={14} /> Satz hinzufügen
+                </Button>
               </div>
             </div>
           ))}

@@ -45,14 +45,19 @@ export interface Exercise {
   updatedAt: string;
 }
 
+/** Zielwert für einen einzelnen Satz innerhalb eines Trainingsplans. */
+export interface PlanSetTarget {
+  reps: number;
+  weight?: number;
+}
+
 /** Eine geplante Übung innerhalb eines Trainingsplans (Vorlage, keine echten Sätze). */
 export interface PlanExercise {
   id: string;
   exerciseId: string;
   order: number;
-  targetSets: number;
-  targetReps: number;
-  targetWeight?: number;
+  /** Ein Eintrag pro geplantem Satz — erlaubt unterschiedliche Ziele je Satz (z.B. Satz 1 schwerer als Satz 2). */
+  targetSets: PlanSetTarget[];
   note?: string;
 }
 

@@ -116,6 +116,31 @@ Beim ersten Start wird die App automatisch mit Beispieldaten befüllt
 Unter **Einstellungen** lassen sich alle Daten jederzeit auf die
 Beispieldaten zurücksetzen oder vollständig löschen.
 
+## 5. Persönlicher Standard-Trainingsplan (fest im Code)
+
+In `src/data/userPlan.ts` ist ein persönlicher Trainingsplan mit drei Tagen
+(„Beine", „Arme & Schulter", „Brust & Rücken") fest hinterlegt — inklusive
+aller Übungen und, pro Übung, individueller Ziel-Werte **je Satz** (Satz 1
+kann andere Wiederholungen/Gewicht haben als Satz 2 usw.). Das entspricht dem
+Datenmodell in `types/index.ts`: `PlanExercise.targetSets` ist ein Array von
+`{ reps, weight }` — ein Eintrag pro geplantem Satz, nicht mehr ein
+einheitlicher Wert für alle Sätze.
+
+`src/lib/defaultPlanSeed.ts` fügt diesen Plan **automatisch** beim App-Start
+hinzu, unabhängig davon ob es ein neuer oder bereits bestehender Account ist.
+Die Prüfung läuft über die Plan-Namen (nicht über ein Flag), ist also sicher
+mehrfach aufrufbar — auch wenn man sich auf einem zweiten Gerät anmeldet und
+der Plan über die Cloud bereits vorhanden ist, wird er nicht dupliziert.
+Ebenso wird die externe Übungsdatenbank (siehe Abschnitt 6) beim ersten
+Start automatisch im Hintergrund geladen, damit beim Eintragen eines
+Trainings möglichst immer eine passende Übung per Dropdown auswählbar ist,
+ohne dass eine neue Übung von Hand angelegt werden muss.
+
+Um den Plan zu ändern: `src/data/userPlan.ts` bearbeiten (Übungsliste
+`USER_PLAN_EXERCISES` und Plan-Definitionen `USER_PLAN_DEFINITIONS`) und neu
+deployen — bereits vorhandene gleichnamige Pläne werden dabei nicht
+automatisch aktualisiert, nur neu hinzugefügte.
+
 ## 6. Cloud-Synchronisierung (Supabase)
 
 Die App unterstützt optional eine echte Synchronisierung zwischen mehreren

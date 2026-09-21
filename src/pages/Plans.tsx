@@ -75,11 +75,12 @@ export default function Plans() {
                   .slice()
                   .sort((a, b) => a.order - b.order)
                   .map((pe) => (
-                    <li key={pe.id} className="flex justify-between text-ink-muted">
-                      <span className="text-ink">{exerciseName(pe.exerciseId)}</span>
-                      <span className="tabular-nums">
-                        {pe.targetSets} × {pe.targetReps}
-                        {pe.targetWeight ? ` @ ${pe.targetWeight}` : ''}
+                    <li key={pe.id} className="flex justify-between gap-3 text-ink-muted">
+                      <span className="text-ink shrink-0">{exerciseName(pe.exerciseId)}</span>
+                      <span className="tabular-nums text-right">
+                        {pe.targetSets
+                          .map((ts) => `${ts.reps}${ts.weight ? `×${ts.weight}` : ''}`)
+                          .join(' / ')}
                       </span>
                     </li>
                   ))}

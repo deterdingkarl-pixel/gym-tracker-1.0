@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import { fetchCloudData, pushCloudData } from '@/lib/cloudSync';
+import { ensureDefaultTrainingPlanSeeded, ensureRepDbAutoImported } from '@/lib/defaultPlanSeed';
 import { AppData } from '@/types';
 
 export type SyncStatus = 'idle' | 'syncing' | 'synced' | 'error';
@@ -52,6 +53,8 @@ export default function CloudSync({ onStatusChange }: { onStatusChange?: (s: Syn
         if (!cancelled) lastSyncedRef.current = ok ? JSON.stringify(appData) : null;
       }
       if (!cancelled) {
+        ensureDefaultTrainingPlanSeeded();
+        void ensureRepDbAutoImported();
         hydratedRef.current = true;
         report('synced');
       }
