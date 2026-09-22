@@ -1,0 +1,40 @@
+Gym App – Update-Paket (21.09.2026)
+====================================
+
+Enthält alle Dateien mit den besprochenen Änderungen, fertig zum Einspielen
+in dein GitHub-Repository (deterdingkarl-pixel/gym-tracker-1.0, Branch main).
+
+GEÄNDERTE DATEIEN (vorhandene Dateien im Repo ersetzen):
+  src/types/index.ts                 -> Workout.startedAt (neues optionales Feld)
+  src/components/CategoryQuickLog.tsx -> Autosave ohne Button + Live-Trainingsdauer
+  src/lib/cloudSync.ts               -> Ladefehler != "keine Cloud-Daten"
+  src/components/CloudSync.tsx       -> überschreibt bei Ladefehler nichts mehr
+  src/data/userPlan.ts               -> Beinpresse ergänzt, Schulterdrücken (2 Sätze,
+                                         kein Dropsatz), Enges Rudern / Enges Latziehen
+                                         als zwei eigene Übungen mit geklärten Gewichten
+  src/pages/Settings.tsx             -> Warnhinweise bei aktivem Cloud-Sync
+  src/pages/Progress.tsx             -> Fortschrittsdiagramm sortiert nach echtem Datum
+
+EINSPIELEN:
+  Für jede Datei im Repo (GitHub-Weboberfläche, Stift-Symbol zum Bearbeiten)
+  den kompletten Inhalt durch die gleichnamige Datei aus diesem Paket ersetzen.
+  Commit direkt auf main -> Vercel deployt automatisch neu.
+  Keine neuen Abhängigkeiten nötig.
+
+WICHTIG – bestehender Plan in deiner App:
+  Falls du "Arme & Schulter" oder "Brust & Rücken" schon einmal in der App
+  angelegt hattest (lokal oder in der Cloud), werden die NEUEN Werte aus
+  userPlan.ts NICHT automatisch nachgezogen (Pläne werden nur beim erstmaligen
+  Anlegen erstellt, siehe defaultPlanSeed.ts). Du musst danach entweder:
+  a) die beiden Pläne in "Trainingspläne" manuell auf die neuen Werte anpassen, oder
+  b) sie dort löschen, damit sie beim nächsten App-Start neu (mit den
+     korrigierten Werten) angelegt werden.
+
+NICHT ENTHALTEN (nur Doku-Update, kein Codewechsel):
+  PROJECT_CONTEXT.md, CURRENT_STATE.md, TODO.md, README.md liegen ebenfalls
+  aktualisiert in diesem Paket bei (siehe unten) und können 1:1 ersetzt werden.
+
+OFFEN / NICHT UMGESETZT (bewusst, siehe TODO.md):
+  - iPhone-Realtest weiterhin nicht bestätigt (nur Headless-Emulation)
+  - Konflikt-/Merge-Strategie bei zwei gleichzeitig offline geänderten Geräten
+    weiterhin ungelöst (bekanntes, akzeptiertes Verhalten)

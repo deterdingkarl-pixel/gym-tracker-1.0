@@ -12,6 +12,10 @@ export type SyncStatus = 'idle' | 'syncing' | 'synced' | 'error';
  * 1. Lädt einmalig den in der Cloud gespeicherten Stand (falls vorhanden) und ersetzt
  *    damit die lokalen Daten — oder legt, falls noch keine Cloud-Daten existieren,
  *    die aktuellen lokalen Daten dort als Ausgangspunkt an.
+ *    Schlägt das Laden mit einem echten Fehler fehl (Netzwerk/Server), wird NICHTS
+ *    hochgeladen und auch keine spätere lokale Änderung automatisch synchronisiert,
+ *    bis ein erneuter Ladeversuch (z.B. durch Neuladen der Seite) erfolgreich war —
+ *    so werden vorhandene Cloud-Daten nie durch einen Ladefehler überschrieben.
  * 2. Überträgt danach jede lokale Änderung (mit kurzer Verzögerung) automatisch in die Cloud.
  */
 export default function CloudSync({ onStatusChange }: { onStatusChange?: (s: SyncStatus) => void }) {
@@ -43,20 +47,27 @@ export default function CloudSync({ onStatusChange }: { onStatusChange?: (s: Syn
     let cancelled = false;
     report('syncing');
     (async () => {
-      const cloud = await fetchCloudData(user.id);
-      if (cancelled) return;
-      if (cloud) {
-        lastSyncedRef.current = JSON.stringify(cloud);
-        replaceAllData(cloud);
-      } else {
-        const ok = await pushCloudData(user.id, appData);
-        if (!cancelled) lastSyncedRef.current = ok ? JSON.stringify(appData) : null;
-      }
-      if (!cancelled) {
-        ensureDefaultTrainingPlanSeeded();
-        void ensureRepDbAutoImported();
-        hydratedRef.current = true;
-        report('synced');
+      try {
+        const cloud = await fetchCloudData(user.id);
+        if (cancelled) return;
+        if (cloud) {
+          lastSyncedRef.current = JSON.stringify(cloud);
+          replaceAllData(cloud);
+        } else {
+          const ok = await pushCloudData(user.id, appData);
+          if (!cancelled) lastSyncedRef.current = ok ? JSON.stringify(appData) : null;
+        }
+        if (!cancelled) {
+          ensureDefaultTrainingPlanSeeded();
+          void ensureRepDbAutoImported();
+          hydratedRef.current = true;
+          report('synced');
+        }
+      } catch {
+        // Echter Ladefehler: NICHT hochladen, damit vorhandene Cloud-Daten nicht
+        // überschrieben werden. hydratedRef bleibt false, also blockiert auch der
+        // Push-Effekt unten weiter, bis ein Neuladen erfolgreich war.
+        if (!cancelled) report('error');
       }
     })();
     return () => {

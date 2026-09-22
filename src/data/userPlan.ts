@@ -7,11 +7,11 @@ import { Exercise, PlanSetTarget } from '@/types';
  * lib/defaultPlanSeed.ts.
  *
  * Herkunft der Werte: tatsächlich trainierte Sätze, vom Nutzer übermittelt.
- * Bei "Schulterdrücken Multipresse" wurde Satz 1 als Dropsatz (zwei
- * Gewichtsstufen direkt hintereinander) ausgeführt und daher als zwei
- * Zielsätze abgebildet. Bei "Enges Rudern / Latziehen" war nicht eindeutig,
- * welche der beiden Übungsvarianten es war — beide Sätze sind unter einem
- * gemeinsamen Übungseintrag mit einem entsprechenden Hinweis hinterlegt.
+ * "Schulterdrücken Multipresse" und "Enges Rudern" / "Enges Latziehen" wurden
+ * mit dem Nutzer abgeglichen (21.09.2026): Schulterdrücken Multipresse sind
+ * zwei normale Zielsätze (kein Dropsatz). Enges Rudern und Enges Latziehen
+ * sind zwei eigenständige Übungen mit unterschiedlichem Gewicht (Rudern mit
+ * dem höheren, Latziehen mit dem niedrigeren Gewicht).
  */
 
 export const USER_PLAN_EXERCISES: Array<
@@ -22,6 +22,7 @@ export const USER_PLAN_EXERCISES: Array<
   { name: 'Abduktoren', muscleGroup: 'Beine', category: 'Isolationsübung', equipment: 'Maschine' },
   { name: 'Waden', muscleGroup: 'Beine', category: 'Isolationsübung', equipment: 'Maschine' },
   { name: 'Beinstrecker einbeinig', muscleGroup: 'Beine', category: 'Isolationsübung', equipment: 'Maschine' },
+  { name: 'Beinpresse', muscleGroup: 'Beine', category: 'Verbundübung', equipment: 'Maschine' },
   { name: 'Preacher Curl', muscleGroup: 'Bizeps', category: 'Isolationsübung', equipment: 'Maschine' },
   { name: 'Trizeps Pushdown', muscleGroup: 'Trizeps', category: 'Isolationsübung', equipment: 'Kabelzug' },
   { name: 'Trizeps über Kopf', muscleGroup: 'Trizeps', category: 'Isolationsübung', equipment: 'Kabelzug' },
@@ -33,13 +34,8 @@ export const USER_PLAN_EXERCISES: Array<
   { name: 'Schrägbankdrücken Multipresse', muscleGroup: 'Brust', category: 'Verbundübung', equipment: 'Multipresse' },
   { name: 'T-Bar Rudern', muscleGroup: 'Rücken', category: 'Verbundübung', equipment: 'T-Bar' },
   { name: 'Latzug', muscleGroup: 'Rücken', category: 'Verbundübung', equipment: 'Kabelzug' },
-  {
-    name: 'Enges Rudern / Latziehen',
-    muscleGroup: 'Rücken',
-    category: 'Verbundübung',
-    equipment: 'Kabelzug',
-    executionNotes: 'War nicht eindeutig zuzuordnen, welche der beiden Varianten trainiert wurde.',
-  },
+  { name: 'Enges Rudern', muscleGroup: 'Rücken', category: 'Verbundübung', equipment: 'Kabelzug' },
+  { name: 'Enges Latziehen', muscleGroup: 'Rücken', category: 'Verbundübung', equipment: 'Kabelzug' },
   { name: 'Cable Crunches', muscleGroup: 'Bauch', category: 'Isolationsübung', equipment: 'Kabelzug' },
 ];
 
@@ -81,10 +77,8 @@ export const USER_PLAN_DEFINITIONS: PlanDef[] = [
         exerciseName: 'Schulterdrücken Multipresse',
         targetSets: [
           { reps: 4, weight: 55 },
-          { reps: 6, weight: 20 },
           { reps: 3, weight: 55 },
         ],
-        note: 'Satz 1 als Dropsatz ausgeführt (55kg → 20kg direkt im Anschluss).',
       },
       { exerciseName: 'Hintere Schulter', targetSets: [{ reps: 6, weight: 55 }, { reps: 6, weight: 50 }] },
     ],
@@ -97,7 +91,8 @@ export const USER_PLAN_DEFINITIONS: PlanDef[] = [
       { exerciseName: 'Schrägbankdrücken Multipresse', targetSets: [{ reps: 7, weight: 27.5 }, { reps: 8, weight: 25 }] },
       { exerciseName: 'T-Bar Rudern', targetSets: [{ reps: 6, weight: 70 }, { reps: 4, weight: 70 }] },
       { exerciseName: 'Latzug', targetSets: [{ reps: 6, weight: 86 }, { reps: 6, weight: 79 }] },
-      { exerciseName: 'Enges Rudern / Latziehen', targetSets: [{ reps: 8, weight: 86 }, { reps: 5, weight: 100 }] },
+      { exerciseName: 'Enges Rudern', targetSets: [{ reps: 5, weight: 100 }] },
+      { exerciseName: 'Enges Latziehen', targetSets: [{ reps: 8, weight: 86 }] },
       { exerciseName: 'Cable Crunches', targetSets: [{ reps: 7, weight: 77 }, { reps: 8, weight: 73 }] },
     ],
   },

@@ -28,6 +28,8 @@ export default function Settings() {
   const [dbImportResult, setDbImportResult] = useState<{ added: number; skipped: number } | null>(null);
   const [dbImportError, setDbImportError] = useState<string | null>(null);
 
+  const syncsToCloud = isSupabaseConfigured && Boolean(user);
+
   function handleExport() {
     const { version, exercises, plans, workouts, bodyMetrics, settings: s } = fullState;
     exportAsJson({ version, exercises, plans, workouts, bodyMetrics, settings: s });
@@ -200,6 +202,12 @@ export default function Settings() {
           </Button>
           <input ref={fileInputRef} type="file" accept="application/json" hidden onChange={handleFileChange} />
         </div>
+        {syncsToCloud && (
+          <p className="text-xs text-ink-faint">
+            Hinweis: Ein Import überschreibt auch deine Cloud-Daten, da Änderungen automatisch synchronisiert
+            werden.
+          </p>
+        )}
         {importError && <p className="text-sm text-warn">{importError}</p>}
         {importSuccess && <p className="text-sm text-good">Daten wurden erfolgreich importiert.</p>}
       </Card>
@@ -207,7 +215,8 @@ export default function Settings() {
       <Card className="p-5 flex flex-col gap-4 border-warn/20">
         <h2 className="text-sm font-semibold text-ink">Daten zurücksetzen</h2>
         <p className="text-sm text-ink-muted">
-          Setzt alle lokalen Daten (Übungen, Pläne, Trainings, Körpermaße) unwiderruflich zurück.
+          Setzt alle Daten (Übungen, Pläne, Trainings, Körpermaße) unwiderruflich zurück
+          {syncsToCloud ? ' — inklusive deiner Cloud-Daten, da diese automatisch synchronisiert werden' : ''}.
         </p>
         <div className="flex flex-wrap gap-2">
           <Button variant="secondary" onClick={() => resetToSeed()}>

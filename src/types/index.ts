@@ -97,6 +97,15 @@ export interface Workout {
   durationMinutes?: number;
   note?: string;
   exercises: ExerciseLog[];
+  /**
+   * Zeitpunkt (ISO), zu dem dieses Training begonnen wurde — wird beim ersten
+   * automatischen Speichern in CategoryQuickLog gesetzt und danach nicht mehr
+   * verändert. Grundlage für die Trainingsdauer-Anzeige (wird immer aus der
+   * echten Ist-Zeit neu berechnet, läuft daher auch nach Schließen der App
+   * "weiter", ohne einen Hintergrundprozess zu benötigen). Optional, damit
+   * bestehende Trainings ohne dieses Feld weiterhin gültig sind.
+   */
+  startedAt?: string;
   createdAt: string;
   updatedAt: string;
 }

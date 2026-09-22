@@ -121,9 +121,18 @@ export default function Progress() {
     [workouts, start]
   );
 
+  // Sortierung erfolgt über das echte ISO-Datum (isoDate), nicht über den formatierten
+  // Anzeigetext (date) — sonst wäre die Reihenfolge über Monats-/Jahreswechsel hinweg falsch.
   const exerciseSeries = useMemo(() => {
     if (!selectedExerciseId) return [];
-    const points: { date: string; weight: number; reps: number; est1rm: number; volume: number }[] = [];
+    const points: {
+      isoDate: string;
+      date: string;
+      weight: number;
+      reps: number;
+      est1rm: number;
+      volume: number;
+    }[] = [];
     for (const w of filteredWorkouts) {
       const log = w.exercises.find((ex) => ex.exerciseId === selectedExerciseId);
       if (!log || log.sets.length === 0) continue;
@@ -131,6 +140,7 @@ export default function Progress() {
         estimateOneRepMax(s.weight, s.reps) > estimateOneRepMax(best.weight, best.reps) ? s : best
       );
       points.push({
+        isoDate: w.date,
         date: format(parseISO(w.date), 'dd.MM'),
         weight: topSet.weight,
         reps: topSet.reps,
@@ -138,7 +148,7 @@ export default function Progress() {
         volume: Math.round(log.sets.reduce((s, set) => s + set.weight * set.reps, 0)),
       });
     }
-    return points.sort((a, b) => (a.date < b.date ? -1 : 1));
+    return points.sort((a, b) => (a.isoDate < b.isoDate ? -1 : 1));
   }, [filteredWorkouts, selectedExerciseId]);
 
   const personalRecord = useMemo(() => {
