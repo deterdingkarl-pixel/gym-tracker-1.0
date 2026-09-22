@@ -1,9 +1,10 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { useChartTheme } from '@/lib/chartTheme';
 import { Card, Select, Input, Button, EmptyState } from '@/components/ui/Primitives';
 import StatCard from '@/components/StatCard';
 import HeatmapCalendar from '@/components/HeatmapCalendar';
+import { Exercise } from '@/types';
 import {
   estimateOneRepMax,
   trainingDays,
@@ -61,10 +62,58 @@ export default function Progress() {
   const bodyMetrics = useAppStore((s) => s.bodyMetrics);
   const addBodyMetric = useAppStore((s) => s.addBodyMetric);
 
-  const [selectedExerciseId, setSelectedExerciseId] = useState(exercises[0]?.id ?? '');
+  const [selectedExerciseId, setSelectedExerciseId] = useState('');
   const [range, setRange] = useState<RangeKey>('3months');
   const [bwDate, setBwDate] = useState(new Date().toISOString().slice(0, 10));
   const [bwWeight, setBwWeight] = useState('');
+
+  /**
+   * Nur Übungen, für die mindestens ein Satz erfasst wurde — gruppiert nach der
+   * Trainingsart (workoutType), unter der sie geloggt wurden. Workouts ohne
+   * Trainingsart (z.B. freies Training ohne Typangabe) landen in "Ohne Kategorie".
+   * Eine Übung kann in mehreren Gruppen auftauchen, wenn sie unter verschiedenen
+   * Trainingsarten geloggt wurde.
+   */
+  const groupedExerciseOptions = useMemo(() => {
+    const byType = new Map<string, Set<string>>();
+    for (const w of workouts) {
+      const type = w.workoutType?.trim() || 'Ohne Kategorie';
+      for (const log of w.exercises) {
+        if (log.sets.length === 0) continue;
+        if (!byType.has(type)) byType.set(type, new Set());
+        byType.get(type)!.add(log.exerciseId);
+      }
+    }
+    const types = Array.from(byType.keys()).sort((a, b) => {
+      if (a === 'Ohne Kategorie') return 1;
+      if (b === 'Ohne Kategorie') return -1;
+      return a.localeCompare(b, 'de');
+    });
+    return types
+      .map((type) => ({
+        type,
+        exercises: Array.from(byType.get(type)!)
+          .map((id) => exercises.find((e) => e.id === id))
+          .filter((e): e is Exercise => Boolean(e))
+          .sort((a, b) => a.name.localeCompare(b.name, 'de')),
+      }))
+      .filter((g) => g.exercises.length > 0);
+  }, [workouts, exercises]);
+
+  const loggedExerciseIds = useMemo(() => {
+    const set = new Set<string>();
+    groupedExerciseOptions.forEach((g) => g.exercises.forEach((e) => set.add(e.id)));
+    return set;
+  }, [groupedExerciseOptions]);
+
+  // Auswahl gültig halten: beim ersten Laden oder wenn die aktuell gewählte Übung
+  // keine Sätze mehr hat (z.B. nach Löschen des letzten Trainings), auf die erste
+  // verfügbare Übung mit Daten springen.
+  useEffect(() => {
+    if (selectedExerciseId && loggedExerciseIds.has(selectedExerciseId)) return;
+    setSelectedExerciseId(groupedExerciseOptions[0]?.exercises[0]?.id ?? '');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loggedExerciseIds]);
 
   const start = rangeStart(range);
   const filteredWorkouts = useMemo(
@@ -176,57 +225,76 @@ export default function Progress() {
       <Card className="p-4">
         <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
           <h2 className="text-sm font-semibold text-ink">Übungsfortschritt</h2>
-          <Select value={selectedExerciseId} onChange={(e) => setSelectedExerciseId(e.target.value)} className="w-56">
-            {exercises.map((ex) => (
-              <option key={ex.id} value={ex.id}>
-                {ex.name}
-              </option>
-            ))}
-          </Select>
+          {groupedExerciseOptions.length > 0 && (
+            <Select
+              value={selectedExerciseId}
+              onChange={(e) => setSelectedExerciseId(e.target.value)}
+              className="w-56"
+            >
+              {groupedExerciseOptions.map((group) => (
+                <optgroup key={group.type} label={group.type}>
+                  {group.exercises.map((ex) => (
+                    <option key={ex.id} value={ex.id}>
+                      {ex.name}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </Select>
+          )}
         </div>
 
-        {personalRecord && (
-          <p className="text-sm text-ink-muted mb-3">
-            Persönlicher Rekord:{' '}
-            <span className="text-accent font-medium">
-              {personalRecord.weight} {unit} × {personalRecord.reps} (geschätztes 1RM: {personalRecord.est1rm} {unit})
-            </span>{' '}
-            am {format(parseISO(personalRecord.date), 'dd.MM.yyyy')}
-          </p>
-        )}
-
-        {exerciseSeries.length === 0 ? (
+        {groupedExerciseOptions.length === 0 ? (
           <p className="text-sm text-ink-muted py-8 text-center">
-            Keine Daten für diese Übung im gewählten Zeitraum.
+            Noch keine Übung mit erfassten Sätzen vorhanden. Trage zuerst ein Training ein.
           </p>
         ) : (
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <p className="text-xs text-ink-faint mb-2">Geschätztes 1RM &amp; Gewicht ({unit})</p>
-              <ResponsiveContainer width="100%" height={200}>
-                <LineChart data={exerciseSeries}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={c.grid} vertical={false} />
-                  <XAxis dataKey="date" stroke={c.axis} fontSize={11} />
-                  <YAxis stroke={c.axis} fontSize={11} width={36} />
-                  <Tooltip {...c.tooltip} />
-                  <Line type="monotone" dataKey="est1rm" stroke={c.primary} strokeWidth={2} dot={false} name="Geschätztes 1RM" />
-                  <Line type="monotone" dataKey="weight" stroke={c.secondary} strokeWidth={2} dot={false} name="Top-Satz Gewicht" />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-            <div>
-              <p className="text-xs text-ink-faint mb-2">Volumen pro Einheit ({unit})</p>
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={exerciseSeries}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={c.grid} vertical={false} />
-                  <XAxis dataKey="date" stroke={c.axis} fontSize={11} />
-                  <YAxis stroke={c.axis} fontSize={11} width={36} />
-                  <Tooltip {...c.tooltip} />
-                  <Bar dataKey="volume" fill={c.bar2} radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
+          <>
+            {personalRecord && (
+              <p className="text-sm text-ink-muted mb-3">
+                Persönlicher Rekord:{' '}
+                <span className="text-accent font-medium">
+                  {personalRecord.weight} {unit} × {personalRecord.reps} (geschätztes 1RM: {personalRecord.est1rm}{' '}
+                  {unit})
+                </span>{' '}
+                am {format(parseISO(personalRecord.date), 'dd.MM.yyyy')}
+              </p>
+            )}
+
+            {exerciseSeries.length === 0 ? (
+              <p className="text-sm text-ink-muted py-8 text-center">
+                Keine Daten für diese Übung im gewählten Zeitraum.
+              </p>
+            ) : (
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <p className="text-xs text-ink-faint mb-2">Geschätztes 1RM &amp; Gewicht ({unit})</p>
+                  <ResponsiveContainer width="100%" height={200}>
+                    <LineChart data={exerciseSeries}>
+                      <CartesianGrid strokeDasharray="3 3" stroke={c.grid} vertical={false} />
+                      <XAxis dataKey="date" stroke={c.axis} fontSize={11} />
+                      <YAxis stroke={c.axis} fontSize={11} width={36} />
+                      <Tooltip {...c.tooltip} />
+                      <Line type="monotone" dataKey="est1rm" stroke={c.primary} strokeWidth={2} dot={false} name="Geschätztes 1RM" />
+                      <Line type="monotone" dataKey="weight" stroke={c.secondary} strokeWidth={2} dot={false} name="Top-Satz Gewicht" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+                <div>
+                  <p className="text-xs text-ink-faint mb-2">Volumen pro Einheit ({unit})</p>
+                  <ResponsiveContainer width="100%" height={200}>
+                    <BarChart data={exerciseSeries}>
+                      <CartesianGrid strokeDasharray="3 3" stroke={c.grid} vertical={false} />
+                      <XAxis dataKey="date" stroke={c.axis} fontSize={11} />
+                      <YAxis stroke={c.axis} fontSize={11} width={36} />
+                      <Tooltip {...c.tooltip} />
+                      <Bar dataKey="volume" fill={c.bar2} radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </Card>
 
