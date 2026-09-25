@@ -1,0 +1,42 @@
+Gym App – Fix: "Training verschwindet nach längerem Schließen der App"
+========================================================================
+
+Enthaltene Dateien (ersetzen die gleichnamigen Dateien im Repo
+deterdingkarl-pixel/gym-tracker-1.0, Branch main):
+
+  src/lib/storage.ts
+  src/lib/cloudSync.ts
+  src/components/CloudSync.tsx
+
+URSACHE:
+  Bei aktivem Cloud-Sync wurde beim Öffnen der App der Cloud-Stand
+  IMMER geladen und lokal übernommen — auch wenn lokal bereits neuere,
+  aber noch nicht hochgeladene Daten vorhanden waren (z.B. weil das
+  Handy kurz nach dem Eintragen gesperrt wurde, bevor der verzögerte
+  Cloud-Push abgeschlossen war). Dadurch wirkten frisch eingetragene
+  Trainings "zurückgesetzt".
+
+FIX:
+  1. Jede lokale Änderung bekommt einen Zeitstempel
+     (localStorage-Schlüssel "iron-log:last-modified").
+  2. Beim Öffnen wird dieser Zeitstempel mit dem "updated_at" der
+     Cloud-Zeile verglichen. Nur wenn die Cloud wirklich neuer ist,
+     wird der lokale Stand ersetzt. Ist lokal gleich aktuell oder
+     neuer, bleiben die lokalen Daten erhalten und werden hochgeladen.
+  3. Beim Sperren/Schließen der App (visibilitychange/pagehide) wird
+     ein noch ausstehender, verzögerter Cloud-Push sofort ausgelöst,
+     statt die volle Verzögerung (1200ms) abzuwarten.
+
+EINSPIELEN:
+  Für jede der drei Dateien im Repo (GitHub-Weboberfläche, Stift-Symbol)
+  den kompletten Inhalt durch die gleichnamige Datei aus diesem Paket
+  ersetzen. Commit direkt auf main -> Vercel deployt automatisch neu.
+  Keine neuen Abhängigkeiten nötig. src/store/useAppStore.ts muss NICHT
+  geändert werden.
+
+TESTEN:
+  Training eintragen -> App/Handy wirklich sperren, kurz warten
+  -> App wieder öffnen -> prüfen, dass der Eintrag noch da ist.
+
+Falls die App ohne Anmeldung (Gastmodus) genutzt wird, greift dieser
+Fix nicht, da dort kein Cloud-Sync läuft — dann liegt die Ursache woanders.

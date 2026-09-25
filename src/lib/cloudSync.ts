@@ -3,17 +3,24 @@ import { AppData } from '@/types';
 
 const TABLE = 'user_data';
 
+export interface CloudFetchResult {
+  data: AppData;
+  updatedAt: string;
+}
+
 /**
- * Lädt den gespeicherten App-Zustand eines Nutzers aus Supabase.
+ * Lädt den gespeicherten App-Zustand eines Nutzers aus Supabase, inklusive des
+ * Zeitstempels der letzten Cloud-Änderung (`updated_at`). CloudSync.tsx nutzt diesen
+ * Zeitstempel, um zu entscheiden, ob der Cloud- oder der lokale Stand aktueller ist,
+ * statt den lokalen Stand blind zu überschreiben.
+ *
  * Gibt `null` zurück, wenn es tatsächlich noch keine Cloud-Daten für diesen Nutzer
- * gibt. Wirft dagegen bei einem echten Ladefehler (Netzwerk/Server) — so kann der
- * Aufrufer diesen Fall NICHT mit "keine Cloud-Daten vorhanden" verwechseln und
- * versehentlich lokale Daten über vorhandene Cloud-Daten schreiben.
+ * gibt. Wirft dagegen bei einem echten Ladefehler (Netzwerk/Server).
  */
-export async function fetchCloudData(userId: string): Promise<AppData | null> {
+export async function fetchCloudData(userId: string): Promise<CloudFetchResult | null> {
   const { data, error } = await supabase
     .from(TABLE)
-    .select('data')
+    .select('data, updated_at')
     .eq('user_id', userId)
     .maybeSingle();
 
@@ -21,7 +28,8 @@ export async function fetchCloudData(userId: string): Promise<AppData | null> {
     console.error('Cloud-Daten konnten nicht geladen werden:', error);
     throw new Error('cloud-fetch-failed');
   }
-  return (data?.data as AppData) ?? null;
+  if (!data) return null;
+  return { data: data.data as AppData, updatedAt: data.updated_at as string };
 }
 
 /** Schreibt den kompletten App-Zustand eines Nutzers nach Supabase (upsert). */

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import { fetchCloudData, pushCloudData } from '@/lib/cloudSync';
+import { getLastModified } from '@/lib/storage';
 import { ensureDefaultTrainingPlanSeeded, ensureRepDbAutoImported } from '@/lib/defaultPlanSeed';
 import { AppData } from '@/types';
 
@@ -9,14 +10,19 @@ export type SyncStatus = 'idle' | 'syncing' | 'synced' | 'error';
 
 /**
  * Rendert nichts sichtbares. Sobald ein Nutzer angemeldet ist:
- * 1. Lädt einmalig den in der Cloud gespeicherten Stand (falls vorhanden) und ersetzt
- *    damit die lokalen Daten — oder legt, falls noch keine Cloud-Daten existieren,
- *    die aktuellen lokalen Daten dort als Ausgangspunkt an.
- *    Schlägt das Laden mit einem echten Fehler fehl (Netzwerk/Server), wird NICHTS
- *    hochgeladen und auch keine spätere lokale Änderung automatisch synchronisiert,
- *    bis ein erneuter Ladeversuch (z.B. durch Neuladen der Seite) erfolgreich war —
- *    so werden vorhandene Cloud-Daten nie durch einen Ladefehler überschrieben.
- * 2. Überträgt danach jede lokale Änderung (mit kurzer Verzögerung) automatisch in die Cloud.
+ * 1. Lädt einmalig den Cloud-Stand und vergleicht ihn mit dem lokalen Stand:
+ *    - Cloud NEUER als lokal (z.B. anderes Gerät) -> lokal wird durch Cloud ersetzt.
+ *    - Lokal genauso aktuell oder neuer (z.B. weil kurz vor dem Schließen noch etwas
+ *      eingetragen wurde und der Cloud-Push das nicht mehr geschafft hat) -> lokale
+ *      Daten bleiben erhalten und werden in die Cloud hochgeladen. Verhindert, dass
+ *      frisch eingetragene, aber noch nicht hochgeladene Trainings beim nächsten
+ *      Öffnen durch einen älteren Cloud-Stand überschrieben werden.
+ *    Echter Ladefehler (Netzwerk/Server): es wird NICHTS hochgeladen, bis ein erneuter
+ *    Ladeversuch erfolgreich war — vorhandene Cloud-Daten werden nie durch einen
+ *    Ladefehler überschrieben.
+ * 2. Überträgt jede lokale Änderung (kurz verzögert) automatisch in die Cloud. Geht die
+ *    App/der Tab in der Zwischenzeit in den Hintergrund oder wird geschlossen, wird eine
+ *    noch ausstehende Änderung sofort (ohne die Verzögerung abzuwarten) übertragen.
  */
 export default function CloudSync({ onStatusChange }: { onStatusChange?: (s: SyncStatus) => void }) {
   const user = useAuthStore((s) => s.user);
@@ -33,6 +39,10 @@ export default function CloudSync({ onStatusChange }: { onStatusChange?: (s: Syn
   const hydratedRef = useRef(false);
   const lastSyncedRef = useRef<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const appDataRef = useRef(appData);
+  appDataRef.current = appData;
+  const userIdRef = useRef<string | null>(null);
+  userIdRef.current = user?.id ?? null;
   const [, setStatus] = useState<SyncStatus>('idle');
 
   function report(s: SyncStatus) {
@@ -40,7 +50,35 @@ export default function CloudSync({ onStatusChange }: { onStatusChange?: (s: Syn
     onStatusChange?.(s);
   }
 
-  // Einmalig beim Login: Cloud-Stand laden oder anlegen.
+  function flushPendingPush() {
+    if (!debounceRef.current) return;
+    clearTimeout(debounceRef.current);
+    debounceRef.current = null;
+    const uid = userIdRef.current;
+    if (!uid || !hydratedRef.current) return;
+    const serialized = JSON.stringify(appDataRef.current);
+    if (serialized === lastSyncedRef.current) return;
+    pushCloudData(uid, appDataRef.current).then((ok) => {
+      if (ok) lastSyncedRef.current = serialized;
+    });
+  }
+
+  // Ausstehende Änderungen sofort übertragen, wenn die App in den Hintergrund geht oder
+  // geschlossen wird — sonst geht ein kurz vorher eingetragenes Training verloren, falls
+  // das Handy/der Tab vor Ablauf der Debounce-Verzögerung pausiert wird.
+  useEffect(() => {
+    function onVisibilityChange() {
+      if (document.visibilityState === 'hidden') flushPendingPush();
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    window.addEventListener('pagehide', flushPendingPush);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('pagehide', flushPendingPush);
+    };
+  }, []);
+
+  // Einmalig beim Login: Cloud-Stand laden und mit dem lokalen Stand abgleichen.
   useEffect(() => {
     hydratedRef.current = false;
     if (!user) return;
@@ -50,13 +88,19 @@ export default function CloudSync({ onStatusChange }: { onStatusChange?: (s: Syn
       try {
         const cloud = await fetchCloudData(user.id);
         if (cancelled) return;
-        if (cloud) {
-          lastSyncedRef.current = JSON.stringify(cloud);
-          replaceAllData(cloud);
+
+        const localModified = getLastModified();
+        const localTime = localModified ? new Date(localModified).getTime() : 0;
+        const cloudTime = cloud ? new Date(cloud.updatedAt).getTime() : -1;
+
+        if (cloud && cloudTime > localTime) {
+          lastSyncedRef.current = JSON.stringify(cloud.data);
+          replaceAllData(cloud.data);
         } else {
-          const ok = await pushCloudData(user.id, appData);
-          if (!cancelled) lastSyncedRef.current = ok ? JSON.stringify(appData) : null;
+          const ok = await pushCloudData(user.id, appDataRef.current);
+          if (!cancelled) lastSyncedRef.current = ok ? JSON.stringify(appDataRef.current) : null;
         }
+
         if (!cancelled) {
           ensureDefaultTrainingPlanSeeded();
           void ensureRepDbAutoImported();
@@ -64,9 +108,6 @@ export default function CloudSync({ onStatusChange }: { onStatusChange?: (s: Syn
           report('synced');
         }
       } catch {
-        // Echter Ladefehler: NICHT hochladen, damit vorhandene Cloud-Daten nicht
-        // überschrieben werden. hydratedRef bleibt false, also blockiert auch der
-        // Push-Effekt unten weiter, bis ein Neuladen erfolgreich war.
         if (!cancelled) report('error');
       }
     })();
@@ -85,6 +126,7 @@ export default function CloudSync({ onStatusChange }: { onStatusChange?: (s: Syn
     report('syncing');
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
+      debounceRef.current = null;
       const ok = await pushCloudData(user.id, appData);
       lastSyncedRef.current = ok ? serialized : lastSyncedRef.current;
       report(ok ? 'synced' : 'error');

@@ -1,6 +1,7 @@
 import { AppData } from '@/types';
 
 export const STORAGE_KEY = 'iron-log:data';
+export const LAST_MODIFIED_KEY = 'iron-log:last-modified';
 
 export function loadFromStorage(): AppData | null {
   try {
@@ -16,13 +17,32 @@ export function loadFromStorage(): AppData | null {
 export function saveToStorage(data: AppData): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    localStorage.setItem(LAST_MODIFIED_KEY, new Date().toISOString());
   } catch (err) {
     console.error('Konnte Daten nicht in localStorage speichern:', err);
   }
 }
 
+/**
+ * Zeitpunkt (ISO) der letzten lokalen Änderung — wird bei jedem `saveToStorage`-Aufruf
+ * aktualisiert. Dient CloudSync als Vergleichswert, um beim Öffnen der App zu entscheiden,
+ * ob der lokale oder der Cloud-Stand aktueller ist (siehe src/components/CloudSync.tsx).
+ */
+export function getLastModified(): string | null {
+  try {
+    return localStorage.getItem(LAST_MODIFIED_KEY);
+  } catch {
+    return null;
+  }
+}
+
 export function clearStorage(): void {
   localStorage.removeItem(STORAGE_KEY);
+  try {
+    localStorage.removeItem(LAST_MODIFIED_KEY);
+  } catch {
+    // ignore
+  }
 }
 
 export function exportAsJson(data: AppData): void {
