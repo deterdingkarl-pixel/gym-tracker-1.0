@@ -1,0 +1,22 @@
+Ergänzung für PROJECT_CONTEXT.md (dauerhafte Entscheidung)
+==========================================================
+
+1) In Abschnitt 8 ("Wichtige technische Entscheidungen") nach dem Block
+   "Live-Training / Autosave" einfügen:
+
+### Zielwerte folgen dem letzten Training
+
+Beim Autosave in `CategoryQuickLog.tsx` werden die eingetragenen Sätze (Wdh. + Gewicht pro Satz)
+in die Zielwerte des zugehörigen Plans zurückgeschrieben (`syncPlanTargets`). Dadurch stehen sie beim
+nächsten Training vorausgefüllt da und gelten auch in "Trainingspläne". Nur die jüngste Einheit eines
+Plans aktualisiert die Ziele; nur Übungen, die bereits im Plan stehen. Der feste Standardplan aus
+`userPlan.ts` ist damit nur noch der Startwert. Pro-Satz-Struktur (`PlanSetTarget[]`) bleibt unverändert.
+
+2) In Abschnitt 8, Block "Cloud Sync", ergänzen:
+
+Beim Öffnen vergleicht `CloudSync.tsx` den lokalen Zeitstempel (`iron-log:last-modified`) mit
+`updated_at` der Cloud-Zeile: nur bei neuerer Cloud wird lokal ersetzt, sonst wird lokal hochgeladen.
+Ausstehende Pushes werden bei `visibilitychange`/`pagehide` sofort gesendet.
+
+3) In Abschnitt 13 ("Nächster sinnvoller Schritt") Punkt 1 ersetzen durch:
+   "Zielwerte-Funktion und Live-Training praktisch testen (siehe TODO.md, Priorität 1)."
