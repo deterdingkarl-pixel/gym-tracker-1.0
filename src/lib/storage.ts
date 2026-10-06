@@ -1,4 +1,5 @@
 import { AppData } from '@/types';
+import { localDateStr } from '@/lib/dateUtils';
 
 export const STORAGE_KEY = 'iron-log:data';
 export const LAST_MODIFIED_KEY = 'iron-log:last-modified';
@@ -49,17 +50,56 @@ export function exportAsJson(data: AppData): void {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  const stamp = new Date().toISOString().slice(0, 10);
+  const stamp = localDateStr();
   a.href = url;
   a.download = `iron-log-export-${stamp}.json`;
   a.click();
   URL.revokeObjectURL(url);
 }
 
+const isObj = (v: unknown): v is Record<string, any> => typeof v === 'object' && v !== null;
+
+/**
+ * Prüft eine importierte JSON-Datei strenger als nur "hat exercises-Array":
+ * Pflichtlisten (exercises, plans, workouts) und je Eintrag die wichtigsten Felder.
+ * Fehlende optionale Teile (bodyMetrics, settings) werden mit Standardwerten ergänzt.
+ * Wirft bei ungültigem Inhalt einen Error (Settings.tsx zeigt dann die Fehlermeldung).
+ */
 export function parseImportedJson(text: string): AppData {
   const parsed = JSON.parse(text);
-  if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.exercises)) {
-    throw new Error('Ungültiges Dateiformat.');
+  if (!isObj(parsed)) throw new Error('Ungültiges Dateiformat.');
+
+  if (!Array.isArray(parsed.exercises) || !Array.isArray(parsed.plans) || !Array.isArray(parsed.workouts)) {
+    throw new Error('Ungültiges Dateiformat: exercises, plans und workouts müssen Listen sein.');
   }
-  return parsed as AppData;
+  const exercisesOk = parsed.exercises.every(
+    (e: unknown) => isObj(e) && typeof e.id === 'string' && typeof e.name === 'string'
+  );
+  const plansOk = parsed.plans.every(
+    (p: unknown) => isObj(p) && typeof p.id === 'string' && typeof p.name === 'string' && Array.isArray(p.exercises)
+  );
+  const workoutsOk = parsed.workouts.every(
+    (w: unknown) =>
+      isObj(w) &&
+      typeof w.id === 'string' &&
+      typeof w.date === 'string' &&
+      /^\d{4}-\d{2}-\d{2}$/.test(w.date) &&
+      Array.isArray(w.exercises)
+  );
+  if (!exercisesOk || !plansOk || !workoutsOk) {
+    throw new Error('Ungültiges Dateiformat: Einträge in exercises, plans oder workouts sind unvollständig.');
+  }
+
+  const settings = isObj(parsed.settings) ? parsed.settings : {};
+  return {
+    version: 1,
+    exercises: parsed.exercises,
+    plans: parsed.plans,
+    workouts: parsed.workouts,
+    bodyMetrics: Array.isArray(parsed.bodyMetrics) ? parsed.bodyMetrics : [],
+    settings: {
+      weightUnit: settings.weightUnit === 'lb' ? 'lb' : 'kg',
+      theme: settings.theme === 'dark' ? 'dark' : 'light',
+    },
+  } as AppData;
 }

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { v4 as uuid } from 'uuid';
 import { useAppStore } from '@/store/useAppStore';
 import { Modal, Button, Input } from '@/components/ui/Primitives';
+import ExerciseSelect from '@/components/ExerciseSelect';
 import { PlanExercise, PlanSetTarget, WorkoutPlan } from '@/types';
 import { Plus, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
 
@@ -131,7 +132,7 @@ export default function PlanFormModal({
           {items.length === 0 && <p className="text-sm text-ink-muted">Noch keine Übungen im Plan.</p>}
           {items.map((it, idx) => (
             <div key={it.id} className="border border-surface-border rounded-md p-3 flex flex-col gap-3">
-              <div className="flex items-center gap-2">
+              <div className="flex items-start gap-2">
                 <div className="flex flex-col">
                   <button type="button" onClick={() => move(it.id, -1)} disabled={idx === 0} aria-label="Nach oben verschieben" className="text-ink-faint hover:text-ink disabled:opacity-30">
                     <ChevronUp size={14} />
@@ -140,21 +141,11 @@ export default function PlanFormModal({
                     <ChevronDown size={14} />
                   </button>
                 </div>
-                <select
+                <ExerciseSelect
+                  exercises={exercises}
                   value={it.exerciseId}
-                  onChange={(e) => updateItem(it.id, { exerciseId: e.target.value })}
-                  className="flex-1 min-w-0 bg-surface-overlay border border-surface-border rounded-md px-3 py-2 text-sm text-ink focus:border-accent focus:ring-1 focus:ring-accent outline-none"
-                  aria-label="Übung auswählen"
-                >
-                  {exercises
-                    .slice()
-                    .sort((a, b) => a.name.localeCompare(b.name))
-                    .map((ex) => (
-                      <option key={ex.id} value={ex.id}>
-                        {ex.name}
-                      </option>
-                    ))}
-                </select>
+                  onChange={(exerciseId) => updateItem(it.id, { exerciseId })}
+                />
                 <button type="button" onClick={() => removeItem(it.id)} aria-label="Übung entfernen" className="p-2 text-ink-faint hover:text-warn rounded-md hover:bg-surface-overlay">
                   <Trash2 size={16} />
                 </button>

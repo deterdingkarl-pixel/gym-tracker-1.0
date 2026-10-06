@@ -10,6 +10,7 @@ import {
 } from '@/types';
 import { loadFromStorage, saveToStorage, clearStorage } from '@/lib/storage';
 import { buildSeedData } from '@/data/seedData';
+import { localDateStr } from '@/lib/dateUtils';
 
 interface AppState extends AppData {
   // Übungen
@@ -198,7 +199,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       const copy: Workout = {
         ...source,
         id: uuid(),
-        date: new Date().toISOString().slice(0, 10),
+        date: localDateStr(),
         createdAt: now,
         updatedAt: now,
         exercises: source.exercises.map((ex) => ({

@@ -1,7 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { v4 as uuid } from 'uuid';
 import { useAppStore } from '@/store/useAppStore';
+import ExerciseSelect from '@/components/ExerciseSelect';
 import { WorkoutPlan, WorkoutSet } from '@/types';
+import { localDateStr } from '@/lib/dateUtils';
 import { Plus, Trash2, X, Timer } from 'lucide-react';
 
 interface DraftExercise {
@@ -11,7 +13,7 @@ interface DraftExercise {
 }
 
 function todayStr() {
-  return new Date().toISOString().slice(0, 10);
+  return localDateStr();
 }
 
 function emptySet(): WorkoutSet {
@@ -114,6 +116,11 @@ export default function CategoryQuickLog({ plan, onClose }: { plan: WorkoutPlan;
 
   function exerciseName(id: string) {
     return exercises.find((e) => e.id === id)?.name ?? 'Unbekannte Übung';
+  }
+
+  /** Notiz der Übung aus dem Plan (falls vorhanden), nur zur Anzeige. */
+  function planNote(exerciseId: string) {
+    return plan.exercises.find((pe) => pe.exerciseId === exerciseId)?.note;
   }
 
   /**
@@ -266,93 +273,87 @@ export default function CategoryQuickLog({ plan, onClose }: { plan: WorkoutPlan;
       </div>
 
       <div className="flex flex-col gap-3">
-        {draftExercises.map((de) => (
-          <div key={de.key} className="border border-surface-border rounded-md p-3 flex flex-col gap-2">
-            <div className="flex items-center gap-2">
-              <select
-                value={de.exerciseId}
-                onChange={(e) => updateExerciseId(de.key, e.target.value)}
-                className="flex-1 min-w-0 bg-surface-overlay border border-surface-border rounded-md px-3 py-2 text-sm text-ink focus:border-accent focus:ring-1 focus:ring-accent outline-none"
-                aria-label="Übung auswählen"
-              >
-                {exercises
-                  .slice()
-                  .sort((a, b) => a.name.localeCompare(b.name))
-                  .map((ex) => (
-                    <option key={ex.id} value={ex.id}>
-                      {ex.name}
-                    </option>
-                  ))}
-              </select>
-              <button
-                onClick={() => removeExercise(de.key)}
-                aria-label={`${exerciseName(de.exerciseId)} aus dieser Einheit entfernen`}
-                className="p-2 text-ink-faint hover:text-warn rounded-md hover:bg-surface-overlay"
-              >
-                <Trash2 size={16} />
-              </button>
-            </div>
-
-            <div className="grid grid-cols-[1.5rem_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_2rem] gap-1.5 text-[11px] text-ink-faint px-1">
-              <span>Satz</span>
-              <span>Gewicht ({unit})</span>
-              <span>Wdh.</span>
-              <span>RPE</span>
-              <span />
-            </div>
-            {de.sets.map((set, si) => (
-              <div key={set.id} className="grid grid-cols-[1.5rem_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_2rem] gap-1.5 items-center">
-                <span className="text-sm text-ink-muted text-center">{si + 1}</span>
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  step="0.5"
-                  min={0}
-                  value={set.weight || ''}
-                  onChange={(e) => updateSet(de.key, set.id, { weight: Number(e.target.value) })}
-                  className="w-full min-w-0 bg-surface-overlay border border-surface-border rounded-md px-2 py-2 text-sm text-ink focus:border-accent focus:ring-1 focus:ring-accent outline-none"
-                  aria-label={`Gewicht Satz ${si + 1}`}
-                />
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  min={0}
-                  value={set.reps || ''}
-                  onChange={(e) => updateSet(de.key, set.id, { reps: Number(e.target.value) })}
-                  className="w-full min-w-0 bg-surface-overlay border border-surface-border rounded-md px-2 py-2 text-sm text-ink focus:border-accent focus:ring-1 focus:ring-accent outline-none"
-                  aria-label={`Wiederholungen Satz ${si + 1}`}
-                />
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  min={1}
-                  max={10}
-                  value={set.rpe ?? ''}
-                  onChange={(e) =>
-                    updateSet(de.key, set.id, { rpe: e.target.value ? Number(e.target.value) : undefined })
-                  }
-                  placeholder="–"
-                  className="w-full min-w-0 bg-surface-overlay border border-surface-border rounded-md px-2 py-2 text-sm text-ink focus:border-accent focus:ring-1 focus:ring-accent outline-none"
-                  aria-label={`RPE Satz ${si + 1}`}
+        {draftExercises.map((de) => {
+          const note = planNote(de.exerciseId);
+          return (
+            <div key={de.key} className="border border-surface-border rounded-md p-3 flex flex-col gap-2">
+              <div className="flex items-start gap-2">
+                <ExerciseSelect
+                  exercises={exercises}
+                  value={de.exerciseId}
+                  onChange={(exerciseId) => updateExerciseId(de.key, exerciseId)}
                 />
                 <button
-                  onClick={() => removeSet(de.key, set.id)}
-                  disabled={de.sets.length <= 1}
-                  aria-label={`Satz ${si + 1} entfernen`}
-                  className="p-1.5 text-ink-faint hover:text-warn rounded-md hover:bg-surface-overlay justify-self-center disabled:opacity-30"
+                  onClick={() => removeExercise(de.key)}
+                  aria-label={`${exerciseName(de.exerciseId)} aus dieser Einheit entfernen`}
+                  className="p-2 text-ink-faint hover:text-warn rounded-md hover:bg-surface-overlay"
                 >
-                  <Trash2 size={14} />
+                  <Trash2 size={16} />
                 </button>
               </div>
-            ))}
-            <button
-              onClick={() => addSet(de.key)}
-              className="self-start text-sm text-ink-muted hover:text-ink flex items-center gap-1 px-2 py-1"
-            >
-              <Plus size={14} /> Satz hinzufügen
-            </button>
-          </div>
-        ))}
+              {note && <p className="text-xs text-ink-faint px-1">{note}</p>}
+
+              <div className="grid grid-cols-[1.5rem_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_2rem] gap-1.5 text-[11px] text-ink-faint px-1">
+                <span>Satz</span>
+                <span>Gewicht ({unit})</span>
+                <span>Wdh.</span>
+                <span>RPE</span>
+                <span />
+              </div>
+              {de.sets.map((set, si) => (
+                <div key={set.id} className="grid grid-cols-[1.5rem_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_2rem] gap-1.5 items-center">
+                  <span className="text-sm text-ink-muted text-center">{si + 1}</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step="0.5"
+                    min={0}
+                    value={set.weight || ''}
+                    onChange={(e) => updateSet(de.key, set.id, { weight: Number(e.target.value) })}
+                    className="w-full min-w-0 bg-surface-overlay border border-surface-border rounded-md px-2 py-2 text-sm text-ink focus:border-accent focus:ring-1 focus:ring-accent outline-none"
+                    aria-label={`Gewicht Satz ${si + 1}`}
+                  />
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    value={set.reps || ''}
+                    onChange={(e) => updateSet(de.key, set.id, { reps: Number(e.target.value) })}
+                    className="w-full min-w-0 bg-surface-overlay border border-surface-border rounded-md px-2 py-2 text-sm text-ink focus:border-accent focus:ring-1 focus:ring-accent outline-none"
+                    aria-label={`Wiederholungen Satz ${si + 1}`}
+                  />
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    max={10}
+                    value={set.rpe ?? ''}
+                    onChange={(e) =>
+                      updateSet(de.key, set.id, { rpe: e.target.value ? Number(e.target.value) : undefined })
+                    }
+                    placeholder="–"
+                    className="w-full min-w-0 bg-surface-overlay border border-surface-border rounded-md px-2 py-2 text-sm text-ink focus:border-accent focus:ring-1 focus:ring-accent outline-none"
+                    aria-label={`RPE Satz ${si + 1}`}
+                  />
+                  <button
+                    onClick={() => removeSet(de.key, set.id)}
+                    disabled={de.sets.length <= 1}
+                    aria-label={`Satz ${si + 1} entfernen`}
+                    className="p-1.5 text-ink-faint hover:text-warn rounded-md hover:bg-surface-overlay justify-self-center disabled:opacity-30"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))}
+              <button
+                onClick={() => addSet(de.key)}
+                className="self-start text-sm text-ink-muted hover:text-ink flex items-center gap-1 px-2 py-1"
+              >
+                <Plus size={14} /> Satz hinzufügen
+              </button>
+            </div>
+          );
+        })}
 
         <button
           onClick={addExerciseRow}

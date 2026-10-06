@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { v4 as uuid } from 'uuid';
 import { useAppStore } from '@/store/useAppStore';
 import { Modal, Button, Input, Select, Textarea } from '@/components/ui/Primitives';
+import ExerciseSelect from '@/components/ExerciseSelect';
 import { ExerciseLog, Workout, WorkoutSet } from '@/types';
+import { localDateStr } from '@/lib/dateUtils';
 import { Plus, Trash2, GripVertical } from 'lucide-react';
 
 interface DraftExercise {
@@ -17,7 +19,7 @@ function emptySet(): WorkoutSet {
 }
 
 function todayStr() {
-  return new Date().toISOString().slice(0, 10);
+  return localDateStr();
 }
 
 export default function WorkoutFormModal({
@@ -218,20 +220,13 @@ export default function WorkoutFormModal({
 
           {draftExercises.map((de) => (
             <div key={de.key} className="border border-surface-border rounded-md p-3 flex flex-col gap-3">
-              <div className="flex items-center gap-2">
-                <GripVertical size={16} className="text-ink-faint shrink-0" />
-                <select
+              <div className="flex items-start gap-2">
+                <GripVertical size={16} className="text-ink-faint shrink-0 mt-2.5" />
+                <ExerciseSelect
+                  exercises={exercises}
                   value={de.exerciseId}
-                  onChange={(e) => updateExerciseRow(de.key, { exerciseId: e.target.value })}
-                  className="flex-1 min-w-0 bg-surface-overlay border border-surface-border rounded-md px-3 py-2 text-sm text-ink focus:border-accent focus:ring-1 focus:ring-accent outline-none"
-                  aria-label="Übung auswählen"
-                >
-                  {exercises.map((ex) => (
-                    <option key={ex.id} value={ex.id}>
-                      {ex.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(exerciseId) => updateExerciseRow(de.key, { exerciseId })}
+                />
                 <button
                   type="button"
                   onClick={() => removeExerciseRow(de.key)}

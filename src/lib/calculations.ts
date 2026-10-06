@@ -1,5 +1,6 @@
 import { Workout, WorkoutSet } from '@/types';
 import { parseISO, differenceInCalendarDays, isSameWeek, isSameMonth } from 'date-fns';
+import { localDateStr, addDaysLocal } from '@/lib/dateUtils';
 
 /** Geschätztes 1-Wiederholungs-Maximum nach der Epley-Formel. */
 export function estimateOneRepMax(weight: number, reps: number): number {
@@ -35,25 +36,18 @@ export function trainingDays(workouts: Workout[]): string[] {
   return days.sort((a, b) => (a < b ? 1 : -1));
 }
 
-/** Aktuelle Trainingsserie in aufeinanderfolgenden Kalendertagen, ausgehend von heute/gestern. */
+/** Aktuelle Trainingsserie in aufeinanderfolgenden Kalendertagen, ausgehend von heute/gestern (lokale Zeit). */
 export function currentStreak(workouts: Workout[], today = new Date()): number {
   const days = new Set(workouts.map((w) => w.date));
   let streak = 0;
   let cursor = today;
-  // Erlaubt, dass "heute" noch nicht trainiert wurde, ohne die Serie zu heute-inklusive zu brechen.
-  const todayStr = cursor.toISOString().slice(0, 10);
-  if (!days.has(todayStr)) {
-    cursor = new Date(cursor.getTime() - 86400000);
+  // Erlaubt, dass "heute" noch nicht trainiert wurde, ohne die Serie zu brechen.
+  if (!days.has(localDateStr(cursor))) {
+    cursor = addDaysLocal(cursor, -1);
   }
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
-    const key = cursor.toISOString().slice(0, 10);
-    if (days.has(key)) {
-      streak += 1;
-      cursor = new Date(cursor.getTime() - 86400000);
-    } else {
-      break;
-    }
+  while (days.has(localDateStr(cursor))) {
+    streak += 1;
+    cursor = addDaysLocal(cursor, -1);
   }
   return streak;
 }

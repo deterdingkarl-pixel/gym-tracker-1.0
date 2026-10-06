@@ -70,18 +70,21 @@ export default function Plans() {
                 </button>
               </div>
 
-              <ul className="flex flex-col gap-1 text-sm">
+              <ul className="flex flex-col gap-1.5 text-sm">
                 {plan.exercises
                   .slice()
                   .sort((a, b) => a.order - b.order)
                   .map((pe) => (
-                    <li key={pe.id} className="flex justify-between gap-3 text-ink-muted">
-                      <span className="text-ink min-w-0">{exerciseName(pe.exerciseId)}</span>
-                      <span className="tabular-nums text-right shrink-0">
-                        {pe.targetSets
-                          .map((ts) => `${ts.reps}${ts.weight ? `×${ts.weight}` : ''}`)
-                          .join(' / ')}
-                      </span>
+                    <li key={pe.id} className="flex flex-col">
+                      <div className="flex justify-between gap-3 text-ink-muted">
+                        <span className="text-ink min-w-0">{exerciseName(pe.exerciseId)}</span>
+                        <span className="tabular-nums text-right shrink-0">
+                          {pe.targetSets
+                            .map((ts) => `${ts.reps}${ts.weight ? `×${ts.weight}` : ''}`)
+                            .join(' / ')}
+                        </span>
+                      </div>
+                      {pe.note && <span className="text-xs text-ink-faint mt-0.5">{pe.note}</span>}
                     </li>
                   ))}
               </ul>

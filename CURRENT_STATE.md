@@ -1,7 +1,17 @@
 # Gym App – Current State
 
-Stand: 06.10.2026 — abgeglichen mit dem Code im GitHub-Stand (Dateien einzeln geprüft).
-**Noch nicht bestätigt:** Praxistest auf dem iPhone/Handy (Navigation, Live-Training, Zielwerte-Nachziehen, Cloud-Sync mit zwei Geräten).
+Stand: 06.10.2026 — abgeglichen mit dem Code im GitHub-Stand (Dateien einzeln geprüft), plus Update vom 06.10.2026 (siehe Abschnitt 0).
+**Noch nicht bestätigt:** Praxistest auf dem iPhone/Handy (Navigation, Live-Training, Zielwerte-Nachziehen, Cloud-Sync mit zwei Geräten) sowie alle Punkte aus Abschnitt 0 (Build und Test nach dem Einspielen).
+
+## 0. Update 06.10.2026 (im Code, noch nicht praktisch getestet)
+
+* **Lokales Datum statt UTC:** `src/lib/dateUtils.ts` (`localDateStr`, `addDaysLocal`). Verwendet in `CategoryQuickLog`, `WorkoutFormModal`, `Progress`, `calculations.currentStreak`, `useAppStore.duplicateWorkout`, `storage.exportAsJson`. Noch UTC: `data/seedData.ts` (`dateDaysAgo`, nur Beispieldaten).
+* **Übungsauswahl mit Suche:** `src/components/ExerciseSelect.tsx` (alphabetisch sortiert; ab 15 Übungen Suchfeld; gewählte Übung bleibt immer in der Liste; Enter im Suchfeld sendet kein Formular). Verwendet in `CategoryQuickLog`, `PlanFormModal`, `WorkoutFormModal`.
+* **Plan-Notiz:** `PlanExercise.note` wird in `Plans.tsx` und in `CategoryQuickLog` angezeigt (nur Anzeige).
+* **Körpergewicht löschen:** `Progress.tsx` listet die letzten 8 Einträge mit Löschen-Button (Store-Aktion `deleteBodyMetric`).
+* **JSON-Import strenger:** `storage.parseImportedJson` prüft Listen und Pflichtfelder, ergänzt `bodyMetrics`/`settings` bei Fehlen.
+* **Repo-Dateien:** `vercel.json` (Rewrite aller Pfade auf `/index.html`), `.gitignore`, `.env.example`.
+* Es wurden keine neuen Dependencies hinzugefügt. Der Build wurde für dieses Update nicht ausgeführt.
 
 ## 1. Zuletzt hinzugekommen (im Code vorhanden)
 
@@ -21,26 +31,26 @@ Stand: 06.10.2026 — abgeglichen mit dem Code im GitHub-Stand (Dateien einzeln 
 
 * **Dashboard:** Kennzahlen, Wochenvolumen, Trainingskalender, Top-4-PRs, letzte Einheit.
 * **Training eintragen:** drei Kategorie-Karten (Beine, Arme & Schulter, Brust & Rücken) mit `CategoryQuickLog`; „Freies Training" über `WorkoutFormModal` (expliziter Speichern-Button); Historie mit Bearbeiten, Kopieren, Löschen.
-* **Trainingspläne:** CRUD, Favoriten, Sortierung, Ziele pro Satz.
-* **Übungen:** Bibliothek mit Suche + Filtern, CRUD. Übungsauswahl in Formularen ist weiterhin ein reines Dropdown (keine Suche).
-* **Fortschritt:** Zeitraumfilter, Übungsverlauf, PR, Kalender, Wochentage, Körpergewicht.
+* **Trainingspläne:** CRUD, Favoriten, Sortierung, Ziele pro Satz, Notiz je Übung (Anzeige).
+* **Übungen:** Bibliothek mit Suche + Filtern, CRUD. Übungsauswahl in Formularen: sortiertes Dropdown mit Suchfeld (`ExerciseSelect`, siehe Abschnitt 0).
+* **Fortschritt:** Zeitraumfilter, Übungsverlauf, PR, Kalender, Wochentage, Körpergewicht (mit Löschen).
 * **Einstellungen:** kg/lb, Hell/Dunkel, RepDB-Import, JSON-Export/-Import und Reset (mit Cloud-Hinweis), Konto.
 * **Login/Cloud:** Supabase E-Mail/Passwort, Gastmodus, Abmelden.
 * **Standardplan:** `userPlan.ts` + `defaultPlanSeed.ts` (nur neue Pläne per Namen, bestehende werden nicht aktualisiert).
 
 ## 3. Bekannte Probleme und Risiken
 
-1. **Datum in UTC:** `toISOString().slice(0, 10)` an mehreren Stellen (u. a. `CategoryQuickLog.todayStr`) — kurz nach Mitternacht lokaler Zeit kann der „heutige" Tag noch der Vortag sein; betrifft auch die „jüngste Einheit"-Prüfung der Zielwerte.
-2. **Beispieldaten beim Erststart:** weiterhin offen.
+1. **Datum in UTC (Rest):** nur noch `seedData.ts` (Beispieldaten). Alle übrigen Stellen nutzen lokale Zeit (Abschnitt 0, ungetestet).
+2. **Beispieldaten beim Erststart:** weiterhin offen (Entscheidung nötig).
 3. **Geräte-/Konto-Wechsel:** weiterhin offen.
-4. **Übungsauswahl ohne Suche:** weiterhin offen.
-5. **Deep Links auf Vercel:** unbestätigt.
-6. **RepDB-Dedupe nur nach Name.**
-7. **Sync-Konflikte bei zwei Geräten:** kein echter Merge (bekannt, akzeptiert).
-8. **Live-Timer bei geschlossener App:** nur Neuberechnung beim Öffnen (akzeptierte Grenze).
-9. **Zielwerte-Autosave schreibt auch Zwischenstände:** während des Tippens kann der Plan kurz unvollständige Werte enthalten (z. B. Wdh. 0), nach dem nächsten Autosave stimmt er wieder.
-10. **Doppelte Übung im selben Training:** nur der erste Eintrag mit dieser Übung aktualisiert den Plan.
-11. Bereits angelegte Pläne werden bei Änderungen an `userPlan.ts` nicht automatisch aktualisiert.
+4. **Deep Links auf Vercel:** `vercel.json` ergänzt, Wirkung unbestätigt.
+5. **RepDB-Dedupe nur nach Name.**
+6. **Sync-Konflikte bei zwei Geräten:** kein echter Merge (bekannt, akzeptiert).
+7. **Live-Timer bei geschlossener App:** nur Neuberechnung beim Öffnen (akzeptierte Grenze).
+8. **Zielwerte-Autosave schreibt auch Zwischenstände:** während des Tippens kann der Plan kurz unvollständige Werte enthalten (z. B. Wdh. 0), nach dem nächsten Autosave stimmt er wieder.
+9. **Doppelte Übung im selben Training:** nur der erste Eintrag mit dieser Übung aktualisiert den Plan.
+10. Bereits angelegte Pläne werden bei Änderungen an `userPlan.ts` nicht automatisch aktualisiert.
+11. Plan-Notizen lassen sich im Plan-Formular nicht bearbeiten (nur Anzeige; Quelle ist `userPlan.ts`).
 
 ## 4. Cloud-Sync und Speicherung
 
@@ -48,8 +58,8 @@ Storage-Keys `iron-log:data`, `iron-log:last-modified`, `iron-log:guest-mode`, `
 
 ## 5. Hinweis zu losen Update-Dateien im Repo
 
-`README-UPDATE.txt`, `LIESMICH.txt`, `HINWEISE.txt` sind einmalige Einspiel-Notizen früherer Updates; deren Inhalt ist im Code umgesetzt und hier dokumentiert. Sie können bei Bedarf gelöscht werden.
+`README-UPDATE.txt`, `LIESMICH.txt`, `HINWEISE.txt`, `PROJECT_CONTEXT-ERGAENZUNG.txt` sind einmalige Einspiel-Notizen früherer Updates; deren Inhalt ist im Code umgesetzt und hier dokumentiert. Sie können in GitHub gelöscht werden.
 
 ## 6. Nächste Priorität
 
-Siehe `TODO.md`: Praxistest der Zielwerte-Funktion und des Live-Trainings, iPhone-Realtest, dann Priorität 2.
+Siehe `TODO.md`: Update vom 06.10.2026 einspielen, Vercel-Build prüfen und Punkte aus „Priorität 1a" testen; danach Praxistests (Zielwerte, Live-Training, iPhone).
