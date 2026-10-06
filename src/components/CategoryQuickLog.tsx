@@ -44,6 +44,10 @@ function formatDuration(ms: number): string {
  * Hintergrundprozess (reine Web-App), die Anzeige "läuft" also nur, solange die
  * App/der Tab offen ist, zeigt beim Wiederöffnen aber wieder die korrekte
  * verstrichene Zeit.
+ *
+ * Zielwerte folgen dem letzten Training: Nach jedem Speichern werden die eingetragenen
+ * Sätze in die Zielwerte des Plans zurückgeschrieben (siehe `syncPlanTargets`). Dadurch
+ * stehen sie beim nächsten Mal vorausgefüllt da und gelten auch in "Trainingspläne".
  */
 export default function CategoryQuickLog({ plan, onClose }: { plan: WorkoutPlan; onClose: () => void }) {
   const workouts = useAppStore((s) => s.workouts);
@@ -112,6 +116,28 @@ export default function CategoryQuickLog({ plan, onClose }: { plan: WorkoutPlan;
     return exercises.find((e) => e.id === id)?.name ?? 'Unbekannte Übung';
   }
 
+  /**
+   * Schreibt die eingetragenen Sätze als neue Zielwerte in den Plan zurück, damit sie
+   * beim nächsten Training vorausgefüllt sind und auch in "Trainingspläne" stehen.
+   * - Nur die jüngste Einheit dieses Plans aktualisiert die Ziele (nachträgliches
+   *   Eintragen älterer Tage überschreibt nichts).
+   * - Nur Übungen, die bereits im Plan stehen und mindestens einen Satz haben.
+   */
+  function syncPlanTargets(logs: { exerciseId: string; sets: WorkoutSet[] }[]) {
+    const { workouts: allWorkouts, plans, updatePlan } = useAppStore.getState();
+    if (allWorkouts.some((w) => w.planId === plan.id && w.date > date)) return;
+    const current = plans.find((p) => p.id === plan.id);
+    if (!current) return;
+    updatePlan(plan.id, {
+      exercises: current.exercises.map((pe) => {
+        const log = logs.find((l) => l.exerciseId === pe.exerciseId && l.sets.length > 0);
+        return log
+          ? { ...pe, targetSets: log.sets.map((s) => ({ reps: s.reps, weight: s.weight || undefined })) }
+          : pe;
+      }),
+    });
+  }
+
   function persistNow(list: DraftExercise[]) {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (!workoutIdRef.current && !hasAnyValue(list)) return; // nichts eingetragen -> noch nichts anlegen
@@ -144,6 +170,7 @@ export default function CategoryQuickLog({ plan, onClose }: { plan: WorkoutPlan;
       setExistingWorkoutId(id);
       setStartedAt(now);
     }
+    syncPlanTargets(exerciseLogs);
     setSavedFlash(true);
     setTimeout(() => setSavedFlash(false), 1500);
   }

@@ -1,40 +1,36 @@
-Gym App – Update-Paket (21.09.2026)
-====================================
+Gym App – Update-Paket: Zielwerte folgen dem letzten Training
+=============================================================
 
-Enthält alle Dateien mit den besprochenen Änderungen, fertig zum Einspielen
-in dein GitHub-Repository (deterdingkarl-pixel/gym-tracker-1.0, Branch main).
-
-GEÄNDERTE DATEIEN (vorhandene Dateien im Repo ersetzen):
-  src/types/index.ts                 -> Workout.startedAt (neues optionales Feld)
-  src/components/CategoryQuickLog.tsx -> Autosave ohne Button + Live-Trainingsdauer
-  src/lib/cloudSync.ts               -> Ladefehler != "keine Cloud-Daten"
-  src/components/CloudSync.tsx       -> überschreibt bei Ladefehler nichts mehr
-  src/data/userPlan.ts               -> Beinpresse ergänzt, Schulterdrücken (2 Sätze,
-                                         kein Dropsatz), Enges Rudern / Enges Latziehen
-                                         als zwei eigene Übungen mit geklärten Gewichten
-  src/pages/Settings.tsx             -> Warnhinweise bei aktivem Cloud-Sync
-  src/pages/Progress.tsx             -> Fortschrittsdiagramm sortiert nach echtem Datum
+GEÄNDERTE DATEI (vorhandene Datei im Repo ersetzen):
+  src/components/CategoryQuickLog.tsx
+    -> Neue Funktion syncPlanTargets(): Nach jedem Autosave werden die
+       eingetragenen Sätze (Wiederholungen + Gewicht pro Satz) in die
+       Zielwerte des Plans geschrieben. Beim nächsten Training sind sie
+       vorausgefüllt, und in "Trainingspläne" stehen dieselben Werte.
+       Cloud-Sync überträgt die Plan-Änderung automatisch mit.
 
 EINSPIELEN:
-  Für jede Datei im Repo (GitHub-Weboberfläche, Stift-Symbol zum Bearbeiten)
-  den kompletten Inhalt durch die gleichnamige Datei aus diesem Paket ersetzen.
-  Commit direkt auf main -> Vercel deployt automatisch neu.
-  Keine neuen Abhängigkeiten nötig.
+  GitHub-Weboberfläche -> src/components/CategoryQuickLog.tsx -> Stift-Symbol
+  -> kompletten Inhalt durch die Datei aus diesem Paket ersetzen
+  -> Commit direkt auf main -> Vercel deployt automatisch.
+  Keine neuen Abhängigkeiten.
 
-WICHTIG – bestehender Plan in deiner App:
-  Falls du "Arme & Schulter" oder "Brust & Rücken" schon einmal in der App
-  angelegt hattest (lokal oder in der Cloud), werden die NEUEN Werte aus
-  userPlan.ts NICHT automatisch nachgezogen (Pläne werden nur beim erstmaligen
-  Anlegen erstellt, siehe defaultPlanSeed.ts). Du musst danach entweder:
-  a) die beiden Pläne in "Trainingspläne" manuell auf die neuen Werte anpassen, oder
-  b) sie dort löschen, damit sie beim nächsten App-Start neu (mit den
-     korrigierten Werten) angelegt werden.
+VERHALTEN / GRENZEN:
+  - Nur die jüngste Einheit eines Plans ändert die Zielwerte (nachträgliches
+    Eintragen älterer Tage überschreibt nichts).
+  - Nur Übungen, die schon im Plan stehen und mind. einen Satz haben.
+    Per Dropdown getauschte/zusätzliche Übungen werden nicht in den Plan
+    übernommen.
+  - Trägst du nur 1 Satz ein, hat der Plan danach auch nur 1 Satz.
+  - RPE wird nicht in den Plan übernommen.
+  - Freies Training (WorkoutFormModal) ist nicht betroffen.
 
-NICHT ENTHALTEN (nur Doku-Update, kein Codewechsel):
-  PROJECT_CONTEXT.md, CURRENT_STATE.md, TODO.md, README.md liegen ebenfalls
-  aktualisiert in diesem Paket bei (siehe unten) und können 1:1 ersetzt werden.
+TESTEN:
+  1. Kategorie öffnen, Werte ändern, kurz warten ("Gespeichert.").
+  2. "Trainingspläne" öffnen -> neue Werte sichtbar?
+  3. Anderes Datum wählen (z.B. morgen nicht möglich -> nach Mitternacht
+     oder Training löschen) -> Felder mit den zuletzt eingetragenen Werten
+     vorausgefüllt?
 
-OFFEN / NICHT UMGESETZT (bewusst, siehe TODO.md):
-  - iPhone-Realtest weiterhin nicht bestätigt (nur Headless-Emulation)
-  - Konflikt-/Merge-Strategie bei zwei gleichzeitig offline geänderten Geräten
-    weiterhin ungelöst (bekanntes, akzeptiertes Verhalten)
+NICHT AKTUALISIERT:
+  CURRENT_STATE.md / TODO.md – erst nach erfolgreichem Test anpassen.
