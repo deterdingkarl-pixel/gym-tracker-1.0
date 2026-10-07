@@ -1,19 +1,20 @@
-Gym App – Fix: Daten werden überschrieben + Beispielpläne (Push/Pull/...)
+Gym App – Fix: Handy zeigt alten Stand, obwohl am PC neu eingetragen wurde
 
-GEÄNDERTE DATEIEN (im Repo ersetzen, Pfade beibehalten):
-  src/store/useAppStore.ts
-  src/lib/defaultPlanSeed.ts
+GEÄNDERTE DATEI (im Repo ersetzen):
+  src/components/CloudSync.tsx
 
-URSACHE:
-  Bei leerem Browser-Speicher startete die App mit Beispieldaten und setzte
-  einen frischen Zeitstempel. CloudSync hielt das für "neuer als die Cloud"
-  und überschrieb die echten Cloud-Daten.
+URSACHE (wahrscheinlich):
+  Der Cloud-Abgleich lief nur einmal beim Anmelden/Neuladen. Eine am Handy
+  im Hintergrund gebliebene App zeigte weiter den alten Stand und hätte bei
+  der nächsten Eingabe die neueren PC-Daten überschrieben.
 
 FIX:
-  - App startet bei leerem Speicher leer, ohne Zeitstempel -> Cloud gewinnt.
-  - Beispielpläne (Push Day, Pull Day, Beispiel: Beine, Ganzkörper) werden
-    einmalig pro Gerät entfernt. Eigene drei Pläne bleiben.
+  Beim Zurückkehren in die App (Handy entsperrt, Tab wieder geöffnet) wird
+  erneut mit der Cloud abgeglichen. Ist die Cloud neuer, wird sie
+  übernommen; sind lokal ausstehende Änderungen vorhanden, werden sie
+  hochgeladen.
 
 EINSPIELEN:
-  GitHub-Weboberfläche -> jede Datei -> Stift-Symbol -> Inhalt ersetzen
-  -> Commit auf main -> Vercel deployt automatisch. Keine neuen Abhängigkeiten.
+  GitHub-Weboberfläche -> src/components/CloudSync.tsx -> Stift-Symbol ->
+  Inhalt ersetzen -> Commit auf main -> Vercel deployt automatisch.
+  Wichtig: Danach die App am Handy einmal komplett schließen und neu öffnen.
