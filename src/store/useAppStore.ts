@@ -10,7 +10,6 @@ import {
 } from '@/types';
 import { loadFromStorage, saveToStorage, clearStorage } from '@/lib/storage';
 import { buildSeedData } from '@/data/seedData';
-import { localDateStr } from '@/lib/dateUtils';
 
 interface AppState extends AppData {
   // Übungen
@@ -50,10 +49,25 @@ function persist(state: AppData) {
   saveToStorage(state);
 }
 
-const initial: AppData = loadFromStorage() ?? buildSeedData();
-if (!loadFromStorage()) {
-  saveToStorage(initial);
+function buildEmptyData(): AppData {
+  return {
+    version: 1,
+    exercises: [],
+    plans: [],
+    workouts: [],
+    bodyMetrics: [],
+    settings: { weightUnit: 'kg', theme: 'light' },
+  };
 }
+
+/**
+ * Erststart / leerer Browser-Speicher: bewusst LEER starten (keine Beispieldaten) und
+ * NICHT in den Speicher schreiben. Würde hier ein frischer Zeitstempel gesetzt, hielte
+ * CloudSync diesen leeren Stand für "neuer als die Cloud" und würde die echten
+ * Cloud-Daten damit überschreiben. Der persönliche Plan wird anschließend über
+ * ensureDefaultTrainingPlanSeeded() ergänzt.
+ */
+const initial: AppData = loadFromStorage() ?? buildEmptyData();
 
 export const useAppStore = create<AppState>((set, get) => ({
   ...initial,
@@ -199,7 +213,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       const copy: Workout = {
         ...source,
         id: uuid(),
-        date: localDateStr(),
+        date: new Date().toISOString().slice(0, 10),
         createdAt: now,
         updatedAt: now,
         exercises: source.exercises.map((ex) => ({
@@ -257,14 +271,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   resetToEmpty: () =>
     set(() => {
-      const empty: AppData = {
-        version: 1,
-        exercises: [],
-        plans: [],
-        workouts: [],
-        bodyMetrics: [],
-        settings: get().settings,
-      };
+      const empty: AppData = { ...buildEmptyData(), settings: get().settings };
       persist(empty);
       return { ...empty };
     }),

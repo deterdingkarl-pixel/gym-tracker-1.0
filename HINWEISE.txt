@@ -1,36 +1,19 @@
-Gym App – Update-Paket: Zielwerte folgen dem letzten Training
-=============================================================
+Gym App – Fix: Daten werden überschrieben + Beispielpläne (Push/Pull/...)
 
-GEÄNDERTE DATEI (vorhandene Datei im Repo ersetzen):
-  src/components/CategoryQuickLog.tsx
-    -> Neue Funktion syncPlanTargets(): Nach jedem Autosave werden die
-       eingetragenen Sätze (Wiederholungen + Gewicht pro Satz) in die
-       Zielwerte des Plans geschrieben. Beim nächsten Training sind sie
-       vorausgefüllt, und in "Trainingspläne" stehen dieselben Werte.
-       Cloud-Sync überträgt die Plan-Änderung automatisch mit.
+GEÄNDERTE DATEIEN (im Repo ersetzen, Pfade beibehalten):
+  src/store/useAppStore.ts
+  src/lib/defaultPlanSeed.ts
+
+URSACHE:
+  Bei leerem Browser-Speicher startete die App mit Beispieldaten und setzte
+  einen frischen Zeitstempel. CloudSync hielt das für "neuer als die Cloud"
+  und überschrieb die echten Cloud-Daten.
+
+FIX:
+  - App startet bei leerem Speicher leer, ohne Zeitstempel -> Cloud gewinnt.
+  - Beispielpläne (Push Day, Pull Day, Beispiel: Beine, Ganzkörper) werden
+    einmalig pro Gerät entfernt. Eigene drei Pläne bleiben.
 
 EINSPIELEN:
-  GitHub-Weboberfläche -> src/components/CategoryQuickLog.tsx -> Stift-Symbol
-  -> kompletten Inhalt durch die Datei aus diesem Paket ersetzen
-  -> Commit direkt auf main -> Vercel deployt automatisch.
-  Keine neuen Abhängigkeiten.
-
-VERHALTEN / GRENZEN:
-  - Nur die jüngste Einheit eines Plans ändert die Zielwerte (nachträgliches
-    Eintragen älterer Tage überschreibt nichts).
-  - Nur Übungen, die schon im Plan stehen und mind. einen Satz haben.
-    Per Dropdown getauschte/zusätzliche Übungen werden nicht in den Plan
-    übernommen.
-  - Trägst du nur 1 Satz ein, hat der Plan danach auch nur 1 Satz.
-  - RPE wird nicht in den Plan übernommen.
-  - Freies Training (WorkoutFormModal) ist nicht betroffen.
-
-TESTEN:
-  1. Kategorie öffnen, Werte ändern, kurz warten ("Gespeichert.").
-  2. "Trainingspläne" öffnen -> neue Werte sichtbar?
-  3. Anderes Datum wählen (z.B. morgen nicht möglich -> nach Mitternacht
-     oder Training löschen) -> Felder mit den zuletzt eingetragenen Werten
-     vorausgefüllt?
-
-NICHT AKTUALISIERT:
-  CURRENT_STATE.md / TODO.md – erst nach erfolgreichem Test anpassen.
+  GitHub-Weboberfläche -> jede Datei -> Stift-Symbol -> Inhalt ersetzen
+  -> Commit auf main -> Vercel deployt automatisch. Keine neuen Abhängigkeiten.

@@ -4,6 +4,41 @@ import { USER_PLAN_EXERCISES, USER_PLAN_DEFINITIONS } from '@/data/userPlan';
 import { fetchRepDbExercises } from '@/lib/repdbImport';
 
 const REPDB_AUTO_IMPORT_FLAG = 'iron-log:repdb-auto-imported';
+const SEED_PLANS_CLEANED_FLAG = 'iron-log:seed-plans-cleaned';
+
+/** Die vier Beispielpläne aus src/data/seedData.ts (Name + Art müssen beide passen). */
+const LEGACY_SEED_PLANS: { name: string; type: string }[] = [
+  { name: 'Push Day', type: 'Push' },
+  { name: 'Pull Day', type: 'Pull' },
+  { name: 'Beispiel: Beine', type: 'Beine' },
+  { name: 'Ganzkörper', type: 'Ganzkörper' },
+];
+
+/**
+ * Entfernt einmalig pro Gerät die Beispielpläne (Push Day, Pull Day, Beispiel: Beine,
+ * Ganzkörper), die durch die frühere Beispieldaten-Initialisierung angelegt wurden.
+ * Die eigenen drei Pläne (Beine, Arme & Schulter, Brust & Rücken) bleiben unberührt.
+ */
+function removeLegacySeedPlans(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    if (localStorage.getItem(SEED_PLANS_CLEANED_FLAG) === '1') return;
+  } catch {
+    return;
+  }
+  const { plans, deletePlan } = useAppStore.getState();
+  for (const p of plans) {
+    const isSeed = LEGACY_SEED_PLANS.some(
+      (s) => s.name === p.name.trim() && s.type === p.type.trim()
+    );
+    if (isSeed) deletePlan(p.id);
+  }
+  try {
+    localStorage.setItem(SEED_PLANS_CLEANED_FLAG, '1');
+  } catch {
+    // ignorieren
+  }
+}
 
 /**
  * Fügt den fest hinterlegten Standard-Trainingsplan hinzu, falls er noch nicht
@@ -12,6 +47,8 @@ const REPDB_AUTO_IMPORT_FLAG = 'iron-log:repdb-auto-imported';
  * Plan über die Cloud-Synchronisierung bereits angekommen ist.
  */
 export function ensureDefaultTrainingPlanSeeded(): void {
+  removeLegacySeedPlans();
+
   const { plans, bulkAddExercises, addPlan } = useAppStore.getState();
 
   const missingPlans = USER_PLAN_DEFINITIONS.filter(
