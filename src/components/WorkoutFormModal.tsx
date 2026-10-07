@@ -2,9 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { v4 as uuid } from 'uuid';
 import { useAppStore } from '@/store/useAppStore';
 import { Modal, Button, Input, Select, Textarea } from '@/components/ui/Primitives';
-import ExerciseSelect from '@/components/ExerciseSelect';
-import { ExerciseLog, Workout, WorkoutSet } from '@/types';
-import { localDateStr } from '@/lib/dateUtils';
+import ExerciseFormModal from '@/components/ExerciseFormModal';
+import { Exercise, ExerciseLog, Workout, WorkoutSet } from '@/types';
 import { Plus, Trash2, GripVertical } from 'lucide-react';
 
 interface DraftExercise {
@@ -19,7 +18,7 @@ function emptySet(): WorkoutSet {
 }
 
 function todayStr() {
-  return localDateStr();
+  return new Date().toISOString().slice(0, 10);
 }
 
 export default function WorkoutFormModal({
@@ -43,6 +42,7 @@ export default function WorkoutFormModal({
   const [duration, setDuration] = useState<string>('');
   const [note, setNote] = useState('');
   const [draftExercises, setDraftExercises] = useState<DraftExercise[]>([]);
+  const [newExerciseOpen, setNewExerciseOpen] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -97,6 +97,11 @@ export default function WorkoutFormModal({
       ...prev,
       { key: uuid(), exerciseId: exercises[0].id, sets: [emptySet()] },
     ]);
+  }
+
+  /** Neu angelegte Übung (liegt bereits in der Bibliothek) direkt als neue Zeile einfügen. */
+  function addCreatedExercise(created: Exercise) {
+    setDraftExercises((prev) => [...prev, { key: uuid(), exerciseId: created.id, sets: [emptySet()] }]);
   }
 
   function removeExerciseRow(key: string) {
@@ -159,156 +164,177 @@ export default function WorkoutFormModal({
   }
 
   return (
-    <Modal
-      open={open}
-      onClose={onClose}
-      title={editingWorkout ? 'Training bearbeiten' : 'Training eintragen'}
-      width="lg"
-    >
-      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-        <div className="grid sm:grid-cols-2 gap-4">
-          <Input
-            label="Datum"
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            required
-            max={todayStr()}
-          />
-          <Select label="Trainingsplan (optional)" value={planId} onChange={(e) => applyPlan(e.target.value)}>
-            <option value="">Kein Plan / freies Training</option>
-            {plans.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </Select>
-          <Input
-            label="Trainingsart (optional)"
-            placeholder="z.B. Push, Pull, Beine"
-            value={workoutType}
-            onChange={(e) => setWorkoutType(e.target.value)}
-          />
-          <Input
-            label="Dauer in Minuten (optional)"
-            type="number"
-            min={0}
-            value={duration}
-            onChange={(e) => setDuration(e.target.value)}
-          />
-        </div>
-        <Textarea
-          label="Notiz (optional)"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          placeholder="Wie hat sich das Training angefühlt?"
-        />
-
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-ink">Übungen</h3>
-            <Button type="button" size="sm" variant="secondary" onClick={addExerciseRow}>
-              <Plus size={16} /> Übung hinzufügen
-            </Button>
+    <>
+      <Modal
+        open={open}
+        onClose={onClose}
+        title={editingWorkout ? 'Training bearbeiten' : 'Training eintragen'}
+        width="lg"
+      >
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+          <div className="grid sm:grid-cols-2 gap-4">
+            <Input
+              label="Datum"
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              required
+              max={todayStr()}
+            />
+            <Select label="Trainingsplan (optional)" value={planId} onChange={(e) => applyPlan(e.target.value)}>
+              <option value="">Kein Plan / freies Training</option>
+              {plans.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </Select>
+            <Input
+              label="Trainingsart (optional)"
+              placeholder="z.B. Push, Pull, Beine"
+              value={workoutType}
+              onChange={(e) => setWorkoutType(e.target.value)}
+            />
+            <Input
+              label="Dauer in Minuten (optional)"
+              type="number"
+              min={0}
+              value={duration}
+              onChange={(e) => setDuration(e.target.value)}
+            />
           </div>
+          <Textarea
+            label="Notiz (optional)"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Wie hat sich das Training angefühlt?"
+          />
 
-          {draftExercises.length === 0 && (
-            <p className="text-sm text-ink-muted">
-              Noch keine Übungen hinzugefügt. Wähle oben einen Plan oder füge Übungen manuell hinzu.
-            </p>
-          )}
-
-          {draftExercises.map((de) => (
-            <div key={de.key} className="border border-surface-border rounded-md p-3 flex flex-col gap-3">
-              <div className="flex items-start gap-2">
-                <GripVertical size={16} className="text-ink-faint shrink-0 mt-2.5" />
-                <ExerciseSelect
-                  exercises={exercises}
-                  value={de.exerciseId}
-                  onChange={(exerciseId) => updateExerciseRow(de.key, { exerciseId })}
-                />
-                <button
-                  type="button"
-                  onClick={() => removeExerciseRow(de.key)}
-                  aria-label="Übung entfernen"
-                  className="p-2 text-ink-faint hover:text-warn rounded-md hover:bg-surface-overlay"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <div className="grid grid-cols-[1.5rem_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_2rem] gap-1.5 text-[11px] text-ink-faint px-1">
-                  <span>Satz</span>
-                  <span>Gewicht ({unit})</span>
-                  <span>Wdh.</span>
-                  <span>RPE</span>
-                  <span />
-                </div>
-                {de.sets.map((set, si) => (
-                  <div key={set.id} className="grid grid-cols-[1.5rem_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_2rem] gap-1.5 items-center">
-                    <span className="text-sm text-ink-muted text-center">{si + 1}</span>
-                    <input
-                      type="number"
-                      inputMode="decimal"
-                      step="0.5"
-                      min={0}
-                      value={set.weight || ''}
-                      onChange={(e) => updateSet(de.key, set.id, { weight: Number(e.target.value) })}
-                      className="w-full min-w-0 bg-surface-overlay border border-surface-border rounded-md px-2.5 py-2 text-sm text-ink focus:border-accent focus:ring-1 focus:ring-accent outline-none"
-                      aria-label={`Gewicht Satz ${si + 1}`}
-                    />
-                    <input
-                      type="number"
-                      inputMode="numeric"
-                      min={0}
-                      value={set.reps || ''}
-                      onChange={(e) => updateSet(de.key, set.id, { reps: Number(e.target.value) })}
-                      className="w-full min-w-0 bg-surface-overlay border border-surface-border rounded-md px-2.5 py-2 text-sm text-ink focus:border-accent focus:ring-1 focus:ring-accent outline-none"
-                      aria-label={`Wiederholungen Satz ${si + 1}`}
-                    />
-                    <input
-                      type="number"
-                      inputMode="numeric"
-                      min={1}
-                      max={10}
-                      value={set.rpe ?? ''}
-                      onChange={(e) =>
-                        updateSet(de.key, set.id, {
-                          rpe: e.target.value ? Number(e.target.value) : undefined,
-                        })
-                      }
-                      placeholder="–"
-                      className="w-full min-w-0 bg-surface-overlay border border-surface-border rounded-md px-2.5 py-2 text-sm text-ink focus:border-accent focus:ring-1 focus:ring-accent outline-none"
-                      aria-label={`RPE Satz ${si + 1}`}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeSet(de.key, set.id)}
-                      aria-label={`Satz ${si + 1} entfernen`}
-                      className="p-2 text-ink-faint hover:text-warn rounded-md hover:bg-surface-overlay justify-self-center"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                ))}
-                <Button type="button" size="sm" variant="ghost" onClick={() => addSet(de.key)} className="self-start">
-                  <Plus size={14} /> Satz hinzufügen
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <h3 className="text-sm font-semibold text-ink">Übungen</h3>
+              <div className="flex gap-2 flex-wrap">
+                <Button type="button" size="sm" variant="secondary" onClick={addExerciseRow}>
+                  <Plus size={16} /> Übung hinzufügen
+                </Button>
+                <Button type="button" size="sm" variant="secondary" onClick={() => setNewExerciseOpen(true)}>
+                  <Plus size={16} /> Eigene Übung erstellen
                 </Button>
               </div>
             </div>
-          ))}
-        </div>
 
-        <div className="flex justify-end gap-2 pt-2 border-t border-surface-border">
-          <Button type="button" variant="secondary" onClick={onClose}>
-            Abbrechen
-          </Button>
-          <Button type="submit" disabled={draftExercises.length === 0}>
-            {editingWorkout ? 'Änderungen speichern' : 'Training speichern'}
-          </Button>
-        </div>
-      </form>
-    </Modal>
+            {draftExercises.length === 0 && (
+              <p className="text-sm text-ink-muted">
+                Noch keine Übungen hinzugefügt. Wähle oben einen Plan oder füge Übungen manuell hinzu.
+              </p>
+            )}
+
+            {draftExercises.map((de) => (
+              <div key={de.key} className="border border-surface-border rounded-md p-3 flex flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <GripVertical size={16} className="text-ink-faint shrink-0" />
+                  <select
+                    value={de.exerciseId}
+                    onChange={(e) => updateExerciseRow(de.key, { exerciseId: e.target.value })}
+                    className="flex-1 min-w-0 bg-surface-overlay border border-surface-border rounded-md px-3 py-2 text-sm text-ink focus:border-accent focus:ring-1 focus:ring-accent outline-none"
+                    aria-label="Übung auswählen"
+                  >
+                    {exercises.map((ex) => (
+                      <option key={ex.id} value={ex.id}>
+                        {ex.name}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => removeExerciseRow(de.key)}
+                    aria-label="Übung entfernen"
+                    className="p-2 text-ink-faint hover:text-warn rounded-md hover:bg-surface-overlay"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <div className="grid grid-cols-[1.5rem_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_2rem] gap-1.5 text-[11px] text-ink-faint px-1">
+                    <span>Satz</span>
+                    <span>Gewicht ({unit})</span>
+                    <span>Wdh.</span>
+                    <span>RPE</span>
+                    <span />
+                  </div>
+                  {de.sets.map((set, si) => (
+                    <div key={set.id} className="grid grid-cols-[1.5rem_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_2rem] gap-1.5 items-center">
+                      <span className="text-sm text-ink-muted text-center">{si + 1}</span>
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        step="0.5"
+                        min={0}
+                        value={set.weight || ''}
+                        onChange={(e) => updateSet(de.key, set.id, { weight: Number(e.target.value) })}
+                        className="w-full min-w-0 bg-surface-overlay border border-surface-border rounded-md px-2.5 py-2 text-sm text-ink focus:border-accent focus:ring-1 focus:ring-accent outline-none"
+                        aria-label={`Gewicht Satz ${si + 1}`}
+                      />
+                      <input
+                        type="number"
+                        inputMode="numeric"
+                        min={0}
+                        value={set.reps || ''}
+                        onChange={(e) => updateSet(de.key, set.id, { reps: Number(e.target.value) })}
+                        className="w-full min-w-0 bg-surface-overlay border border-surface-border rounded-md px-2.5 py-2 text-sm text-ink focus:border-accent focus:ring-1 focus:ring-accent outline-none"
+                        aria-label={`Wiederholungen Satz ${si + 1}`}
+                      />
+                      <input
+                        type="number"
+                        inputMode="numeric"
+                        min={1}
+                        max={10}
+                        value={set.rpe ?? ''}
+                        onChange={(e) =>
+                          updateSet(de.key, set.id, {
+                            rpe: e.target.value ? Number(e.target.value) : undefined,
+                          })
+                        }
+                        placeholder="–"
+                        className="w-full min-w-0 bg-surface-overlay border border-surface-border rounded-md px-2.5 py-2 text-sm text-ink focus:border-accent focus:ring-1 focus:ring-accent outline-none"
+                        aria-label={`RPE Satz ${si + 1}`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeSet(de.key, set.id)}
+                        aria-label={`Satz ${si + 1} entfernen`}
+                        className="p-2 text-ink-faint hover:text-warn rounded-md hover:bg-surface-overlay justify-self-center"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))}
+                  <Button type="button" size="sm" variant="ghost" onClick={() => addSet(de.key)} className="self-start">
+                    <Plus size={14} /> Satz hinzufügen
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2 border-t border-surface-border">
+            <Button type="button" variant="secondary" onClick={onClose}>
+              Abbrechen
+            </Button>
+            <Button type="submit" disabled={draftExercises.length === 0}>
+              {editingWorkout ? 'Änderungen speichern' : 'Training speichern'}
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Bewusst außerhalb des Formulars: verschachtelte <form>-Elemente sind ungültig. */}
+      <ExerciseFormModal
+        open={newExerciseOpen}
+        onClose={() => setNewExerciseOpen(false)}
+        onCreated={addCreatedExercise}
+      />
+    </>
   );
 }

@@ -1,20 +1,37 @@
-Gym App – Fix: Handy zeigt alten Stand, obwohl am PC neu eingetragen wurde
+Gym App – Update: Eigene Übung beim Eintragen + Wochenserie
 
-GEÄNDERTE DATEI (im Repo ersetzen):
-  src/components/CloudSync.tsx
+NEUE DATEI (im Repo neu anlegen):
+  src/lib/weeklyStreak.ts
 
-URSACHE (wahrscheinlich):
-  Der Cloud-Abgleich lief nur einmal beim Anmelden/Neuladen. Eine am Handy
-  im Hintergrund gebliebene App zeigte weiter den alten Stand und hätte bei
-  der nächsten Eingabe die neueren PC-Daten überschrieben.
+GEÄNDERTE DATEIEN (im Repo ersetzen):
+  src/components/ExerciseFormModal.tsx
+  src/components/CategoryQuickLog.tsx
+  src/components/WorkoutFormModal.tsx
+  src/pages/Dashboard.tsx
+  src/pages/Progress.tsx
 
-FIX:
-  Beim Zurückkehren in die App (Handy entsperrt, Tab wieder geöffnet) wird
-  erneut mit der Cloud abgeglichen. Ist die Cloud neuer, wird sie
-  übernommen; sind lokal ausstehende Änderungen vorhanden, werden sie
-  hochgeladen.
+1) EIGENE ÜBUNG ERSTELLEN
+  - In "Training eintragen" (Kategorie-Karte) und im "Freien Training" gibt
+    es neben "Übung hinzufügen" jetzt "Eigene Übung erstellen".
+  - Die Übung wird in der Übungsbibliothek gespeichert und sofort als neue
+    Zeile in das laufende Training eingefügt.
+  - Nicht geändert: Trainingspläne bearbeiten (PlanFormModal).
+
+2) WOCHENSERIE
+  - Eine Kalenderwoche (Mo–So) zählt, wenn mindestens 4 verschiedene Tage
+    trainiert wurde. Die Serie = aufeinanderfolgende Wochen, die zählen.
+  - Die laufende Woche bricht die Serie nicht ab, solange sie das Ziel
+    noch nicht erreicht hat; sie zählt mit, sobald 4 Tage erreicht sind.
+  - Dashboard: Kachel "Wochenserie" (aktuell, Ziel, längste).
+  - Fortschritt: Kachel "Wochenserie" statt "Längste Serie (Tage)".
+  - Die alte Tage-Serie (calculations.ts) bleibt im Code, wird aber nicht
+    mehr angezeigt.
+  - Das Ziel (4) steht in src/lib/weeklyStreak.ts als WEEKLY_GOAL.
 
 EINSPIELEN:
-  GitHub-Weboberfläche -> src/components/CloudSync.tsx -> Stift-Symbol ->
-  Inhalt ersetzen -> Commit auf main -> Vercel deployt automatisch.
-  Wichtig: Danach die App am Handy einmal komplett schließen und neu öffnen.
+  GitHub-Weboberfläche: neue Datei über "Add file -> Create new file"
+  (Pfad src/lib/weeklyStreak.ts), die anderen per Stift-Symbol ersetzen.
+  Commit auf main -> Vercel deployt. Keine neuen Abhängigkeiten.
+
+NICHT ENTHALTEN:
+  Die Übungsdatenbank zum fest Einbauen wurde noch nicht hochgeladen.

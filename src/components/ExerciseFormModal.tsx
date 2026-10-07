@@ -27,10 +27,13 @@ export default function ExerciseFormModal({
   open,
   onClose,
   editingExercise,
+  onCreated,
 }: {
   open: boolean;
   onClose: () => void;
   editingExercise?: Exercise | null;
+  /** Wird nach dem Speichern einer NEUEN Übung aufgerufen (z.B. um sie direkt im Training zu verwenden). */
+  onCreated?: (exercise: Exercise) => void;
 }) {
   const addExercise = useAppStore((s) => s.addExercise);
   const updateExercise = useAppStore((s) => s.updateExercise);
@@ -63,6 +66,7 @@ export default function ExerciseFormModal({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    e.stopPropagation();
     if (!name.trim()) return;
     const payload = {
       name: name.trim(),
@@ -76,6 +80,12 @@ export default function ExerciseFormModal({
       updateExercise(editingExercise.id, payload);
     } else {
       addExercise(payload);
+      // Die ID wird im Store vergeben — die gerade angelegte Übung steht am Ende der Liste.
+      const created = useAppStore
+        .getState()
+        .exercises.filter((ex) => ex.name === payload.name)
+        .pop();
+      if (created) onCreated?.(created);
     }
     onClose();
   }

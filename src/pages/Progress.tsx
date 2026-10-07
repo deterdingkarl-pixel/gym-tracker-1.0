@@ -8,13 +8,11 @@ import { Exercise } from '@/types';
 import {
   estimateOneRepMax,
   trainingDays,
-  workoutVolume,
   weekdayFrequency,
-  longestStreak,
   workoutsThisWeek,
   workoutsThisMonth,
 } from '@/lib/calculations';
-import { localDateStr } from '@/lib/dateUtils';
+import { WEEKLY_GOAL, currentWeeklyStreak, longestWeeklyStreak, weeksLabel } from '@/lib/weeklyStreak';
 import {
   ResponsiveContainer,
   LineChart,
@@ -27,7 +25,7 @@ import {
   Bar,
 } from 'recharts';
 import { format, parseISO, subMonths, subWeeks, subYears, isAfter } from 'date-fns';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
 type RangeKey = 'week' | 'month' | '3months' | 'year' | 'all';
 
@@ -62,11 +60,10 @@ export default function Progress() {
   const c = useChartTheme();
   const bodyMetrics = useAppStore((s) => s.bodyMetrics);
   const addBodyMetric = useAppStore((s) => s.addBodyMetric);
-  const deleteBodyMetric = useAppStore((s) => s.deleteBodyMetric);
 
   const [selectedExerciseId, setSelectedExerciseId] = useState('');
   const [range, setRange] = useState<RangeKey>('3months');
-  const [bwDate, setBwDate] = useState(localDateStr());
+  const [bwDate, setBwDate] = useState(new Date().toISOString().slice(0, 10));
   const [bwWeight, setBwWeight] = useState('');
 
   /**
@@ -190,17 +187,6 @@ export default function Progress() {
     [bodyMetrics]
   );
 
-  /** Die letzten Körpergewichts-Einträge (neueste zuerst), damit sie einzeln gelöscht werden können. */
-  const recentBodyWeights = useMemo(
-    () =>
-      bodyMetrics
-        .filter((m) => m.weight)
-        .slice()
-        .sort((a, b) => (a.date < b.date ? 1 : -1))
-        .slice(0, 8),
-    [bodyMetrics]
-  );
-
   if (exercises.length === 0) {
     return (
       <EmptyState
@@ -236,12 +222,14 @@ export default function Progress() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatCard label="Trainingstage im Zeitraum" value={days.length} />
-        <StatCard label="Diese Woche" value={workoutsThisWeek(workouts)} />
+        <StatCard label="Diese Woche" value={workoutsThisWeek(workouts)} sub={`Ziel: ${WEEKLY_GOAL} Tage`} />
         <StatCard label="Dieser Monat" value={workoutsThisMonth(workouts)} />
         <StatCard
-          label="Längste Serie"
-          value={`${longestStreak(workouts)} Tage`}
-          sub={lastTrainingDay ? `Zuletzt: ${format(parseISO(lastTrainingDay), 'dd.MM.yyyy')}` : undefined}
+          label="Wochenserie"
+          value={weeksLabel(currentWeeklyStreak(workouts))}
+          sub={`Längste: ${weeksLabel(longestWeeklyStreak(workouts))}${
+            lastTrainingDay ? ` · Zuletzt: ${format(parseISO(lastTrainingDay), 'dd.MM.yyyy')}` : ''
+          }`}
         />
       </div>
 
@@ -361,37 +349,15 @@ export default function Progress() {
         {bodyWeightSeries.length === 0 ? (
           <p className="text-sm text-ink-muted">Noch keine Einträge vorhanden.</p>
         ) : (
-          <>
-            <ResponsiveContainer width="100%" height={180}>
-              <LineChart data={bodyWeightSeries}>
-                <CartesianGrid strokeDasharray="3 3" stroke={c.grid} vertical={false} />
-                <XAxis dataKey="date" stroke={c.axis} fontSize={11} />
-                <YAxis stroke={c.axis} fontSize={11} width={36} domain={['auto', 'auto']} />
-                <Tooltip {...c.tooltip} />
-                <Line type="monotone" dataKey="weight" stroke={c.bar2} strokeWidth={2} dot={{ r: 3 }} />
-              </LineChart>
-            </ResponsiveContainer>
-            <ul className="flex flex-col mt-3 border-t border-surface-border">
-              {recentBodyWeights.map((m) => (
-                <li
-                  key={m.id}
-                  className="flex items-center justify-between gap-3 py-1.5 border-b border-surface-border text-sm"
-                >
-                  <span className="text-ink-muted">{format(parseISO(m.date), 'dd.MM.yyyy')}</span>
-                  <span className="text-ink tabular-nums">
-                    {m.weight} {unit}
-                  </span>
-                  <button
-                    onClick={() => deleteBodyMetric(m.id)}
-                    aria-label={`Eintrag vom ${format(parseISO(m.date), 'dd.MM.yyyy')} löschen`}
-                    className="p-1.5 text-ink-faint hover:text-warn rounded-md hover:bg-surface-overlay"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </>
+          <ResponsiveContainer width="100%" height={180}>
+            <LineChart data={bodyWeightSeries}>
+              <CartesianGrid strokeDasharray="3 3" stroke={c.grid} vertical={false} />
+              <XAxis dataKey="date" stroke={c.axis} fontSize={11} />
+              <YAxis stroke={c.axis} fontSize={11} width={36} domain={['auto', 'auto']} />
+              <Tooltip {...c.tooltip} />
+              <Line type="monotone" dataKey="weight" stroke={c.bar2} strokeWidth={2} dot={{ r: 3 }} />
+            </LineChart>
+          </ResponsiveContainer>
         )}
       </Card>
     </div>

@@ -6,14 +6,13 @@ import StatCard from '@/components/StatCard';
 import HeatmapCalendar from '@/components/HeatmapCalendar';
 import { Card, Button, EmptyState } from '@/components/ui/Primitives';
 import {
-  currentStreak,
-  longestStreak,
   trainingDays,
   workoutVolume,
   workoutsThisMonth,
   workoutsThisWeek,
   estimateOneRepMax,
 } from '@/lib/calculations';
+import { WEEKLY_GOAL, currentWeeklyStreak, longestWeeklyStreak, weeksLabel } from '@/lib/weeklyStreak';
 import { Flame, PlusCircle, Dumbbell, TrendingUp, Calendar } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -136,9 +135,9 @@ export default function Dashboard() {
         <StatCard label="Dieser Monat" value={workoutsThisMonth(workouts)} sub="Trainingstage" icon={<Calendar size={16} />} />
         <StatCard label="Insgesamt" value={days.length} sub={`${workouts.length} Einheiten`} icon={<Dumbbell size={16} />} />
         <StatCard
-          label="Aktuelle Serie"
-          value={`${currentStreak(workouts)} Tage`}
-          sub={`Längste: ${longestStreak(workouts)} Tage`}
+          label="Wochenserie"
+          value={weeksLabel(currentWeeklyStreak(workouts))}
+          sub={`Ziel: ${WEEKLY_GOAL} Tage/Woche · Längste: ${weeksLabel(longestWeeklyStreak(workouts))}`}
           icon={<Flame size={16} />}
         />
       </div>
